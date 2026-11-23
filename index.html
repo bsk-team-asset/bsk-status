@@ -155,6 +155,17 @@ td.when { white-space: nowrap; color: var(--muted); font-size: 0.82rem; font-var
 }
 
 /* staff page */
+.bar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.addstaff { width: 100%; margin-top: 10px; }
+.xlist { display: grid; gap: 2px; max-height: 44vh; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 6px; }
+.xlist label { display: flex; gap: 10px; align-items: flex-start; padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.xlist label:hover { background: var(--accent-soft); }
+.xlist input { margin-top: 3px; accent-color: var(--accent); flex: none; }
+.xlist small { display: block; color: var(--muted); font-size: 0.8rem; }
+.xall input { accent-color: var(--accent); }
+.field .xlist input, .field .xall input { width: 16px; height: 16px; flex: none; }
+.field .xall { justify-self: start; }
+.xlist label > span { flex: 1; min-width: 0; }
 .split { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 20px; align-items: start; }
 .side { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 8px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); max-height: calc(100vh - 110px); overflow-y: auto; }
 .side-h { font-size: 0.78rem; font-weight: 600; color: var(--muted); letter-spacing: .04em; padding: 4px 10px 8px; display: block; }
@@ -325,11 +336,15 @@ th { border-bottom-color: var(--accent); }
         <div class="side-h" id="sideTitle">เจ้าหน้าที่</div>
         <ul class="slist" id="staffPick"></ul>
         <label class="smobile"><span class="side-h">เลือกชื่อของคุณ</span><select id="staffSel"></select></label>
+        <button class="btn ghost sm addstaff" id="addStaffBtn" type="button" hidden>+ เพิ่มเจ้าหน้าที่</button>
       </aside>
       <div style="display:grid;gap:14px;align-content:start;min-width:0">
         <div class="bar">
           <h2 id="staffTitle">โครงการที่รับผิดชอบ</h2>
-          <button class="btn" id="addBtn" type="button">+ เพิ่มโครงการใหม่</button>
+          <div class="bar-actions">
+            <button class="btn ghost" id="transferBtn" type="button" hidden>โอนงาน</button>
+            <button class="btn" id="addBtn" type="button">+ เพิ่มโครงการใหม่</button>
+          </div>
         </div>
         <div id="staffCards"></div>
       </div>
@@ -381,6 +396,28 @@ th { border-bottom-color: var(--accent); }
   <label class="field"><span>สถานะล่าสุด</span><textarea id="aStatus" maxlength="600" placeholder="เช่น ขออนุมัติงบประมาณ"></textarea></label>
   <p class="err" id="aErr" role="alert"></p>
   <div class="actions"><button class="btn" type="submit" id="aSave">เพิ่มโครงการ</button><button class="btn ghost" type="button" data-close>ยกเลิก</button></div>
+</form>
+
+<form class="drawer" id="xfer" hidden aria-labelledby="xTitle">
+  <h2 id="xTitle">โอนงาน</h2>
+  <p class="muted" id="xFrom" style="margin:0;font-size:0.9rem"></p>
+  <label class="field"><span>โอนให้</span><select id="xTo"></select></label>
+  <div class="field">
+    <span>เลือกโครงการที่จะโอน</span>
+    <label class="check xall"><input type="checkbox" id="xAll"> เลือกทั้งหมด</label>
+    <div class="xlist" id="xList"></div>
+  </div>
+  <label class="field"><span>หมายเหตุ (ไม่บังคับ)</span><input type="text" id="xNote" maxlength="200" placeholder="เช่น ย้ายไปรับผิดชอบงานอื่น"></label>
+  <p class="err" id="xErr" role="alert"></p>
+  <div class="actions"><button class="btn" type="submit" id="xSave">โอนงาน</button><button class="btn ghost" type="button" data-close>ยกเลิก</button></div>
+</form>
+
+<form class="drawer" id="staffAdd" hidden aria-labelledby="sTitle">
+  <h2 id="sTitle">เพิ่มเจ้าหน้าที่</h2>
+  <label class="field"><span>ชื่อเจ้าหน้าที่</span><input type="text" id="sName" maxlength="60" placeholder="เช่น สมชาย" autocomplete="off"></label>
+  <p class="muted" style="margin:0;font-size:0.85rem">ชื่อจะขึ้นในรายการเจ้าหน้าที่ และเลือกเป็นผู้รับผิดชอบโครงการได้ทันที</p>
+  <p class="err" id="sErr" role="alert"></p>
+  <div class="actions"><button class="btn" type="submit" id="sSave">เพิ่มเจ้าหน้าที่</button><button class="btn ghost" type="button" data-close>ยกเลิก</button></div>
 </form>
 
 <div class="toast" id="toast" hidden></div>
@@ -463,11 +500,19 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzOxQmm1DNmWkk05eGNZ92K
     throw new Error("unknown collection " + path);
   }
   function doc(path) {
-    if (path === "meta/ref") return { onSnapshot(next) { refL.push(next); if (cache.ref) next({ exists: true, data: () => cache.ref }); return () => {}; } };
+    if (path === "meta/ref") {
+      const save = async data => {
+        const have = new Set((cache.ref && cache.ref.staff) || []);
+        for (const name of (data.staff || [])) if (!have.has(name)) await call("addStaff", { name });
+        await refresh();
+      };
+      return { onSnapshot(next) { refL.push(next); if (cache.ref) next({ exists: true, data: () => cache.ref }); return () => {}; }, update: save, set: save };
+    }
     const m = path.match(/^projects\/(.+)$/);
     return { async update(data) { await call("update", { id: m[1], fields: data }); await refresh(); } };
   }
-  const db = { collection, doc };
+  async function transfer(req) { await call("transfer", req); await refresh(); }
+  const db = { collection, doc, transfer };
   const user = { id: async () => "web", isOwner: async () => role === "admin", canEdit: async () => role === "admin", can: async () => true };
   const downloads = { async save({ filename, data }) {
     const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data]));
@@ -653,6 +698,8 @@ function renderStaff() {
   sel.value = S.staff || ""; sel.onchange = () => pick(sel.value);
   const cards = $("staffCards"); cards.replaceChildren();
   $("addBtn").disabled = !S.db;
+  $("addStaffBtn").hidden = !(S.db && S.canEdit);
+  $("transferBtn").hidden = !(S.db && S.staff && S.projects.some(p => p.owner === S.staff));
   if (!S.staff) { $("staffTitle").textContent = "โครงการที่รับผิดชอบ"; cards.innerHTML = `<div class="empty">${S.loaded ? "เลือกชื่อของคุณด้านบน เพื่อดูและอัปเดตโครงการที่รับผิดชอบ" : "กำลังโหลด…"}</div>`; return; }
   const mine = sorted(S.projects.filter(p => p.owner === S.staff));
   $("staffTitle").textContent = `โครงการของ ${S.staff} (${mine.length})`;
@@ -711,8 +758,9 @@ dpBuild("uDue"); dpBuild("aDue");
 
 // ---------- drawers ----------
 let lastFocus = null;
-function openDrawer(id) { lastFocus = document.activeElement; ["detail", "upd", "add"].forEach(d => $(d).hidden = d !== id); $("scrim").hidden = false; }
-function closeDrawers() { ["detail", "upd", "add"].forEach(d => $(d).hidden = true); $("scrim").hidden = true; lastFocus && lastFocus.focus && lastFocus.focus(); }
+const DRAWERS = ["detail", "upd", "add", "xfer", "staffAdd"];
+function openDrawer(id) { lastFocus = document.activeElement; DRAWERS.forEach(d => $(d).hidden = d !== id); $("scrim").hidden = false; }
+function closeDrawers() { DRAWERS.forEach(d => $(d).hidden = true); $("scrim").hidden = true; lastFocus && lastFocus.focus && lastFocus.focus(); }
 $("scrim").onclick = closeDrawers;
 document.querySelectorAll("[data-close]").forEach(b => b.onclick = closeDrawers);
 addEventListener("keydown", e => { if (e.key === "Escape" && !$("scrim").hidden) closeDrawers(); });
@@ -802,6 +850,65 @@ $("add").addEventListener("submit", async e => {
     closeDrawers(); toast("เพิ่มโครงการแล้ว");
   } catch (err) { $("aErr").textContent = err && err.code === "permission_denied" ? "รหัสผ่านไม่ถูกต้องหรือถูกเปลี่ยน กด ออกจากระบบ แล้วเข้าใหม่" : (err && err.msg) || "เพิ่มไม่สำเร็จ ลองอีกครั้ง"; }
   finally { $("aSave").disabled = false; }
+});
+
+// ---------- transfer work ----------
+function xSelected() { return [...document.querySelectorAll('#xList input:checked')].map(i => i.value); }
+function xSync() { const all = document.querySelectorAll('#xList input'), on = xSelected().length;
+  $("xAll").checked = all.length > 0 && on === all.length; $("xAll").indeterminate = on > 0 && on < all.length;
+  $("xSave").textContent = on ? `โอนงาน ${on} โครงการ` : "โอนงาน"; }
+$("transferBtn").onclick = () => {
+  const from = S.staff, mine = sorted(S.projects.filter(p => p.owner === from));
+  $("xFrom").textContent = `จาก ${from} (${mine.length} โครงการ)`;
+  fillSelect($("xTo"), staffList().filter(n => n !== from), "— เลือกเจ้าหน้าที่ —");
+  $("xList").innerHTML = mine.map(p => `<label><input type="checkbox" value="${esc(p.id)}"><span>${esc(p.title)}<small>${esc((typeof stageOf === "function" ? stageOf(p) : STAGES[SI[p.stage] ?? 0]).label)}${p.due ? " | ส่งมอบ " + thDate(p.due) : ""}</small></span></label>`).join("");
+  $("xList").querySelectorAll("input").forEach(i => i.onchange = xSync);
+  $("xNote").value = ""; $("xErr").textContent = ""; xSync();
+  openDrawer("xfer"); $("xTo").focus();
+};
+$("xAll").onchange = e => { document.querySelectorAll('#xList input').forEach(i => i.checked = e.target.checked); xSync(); };
+$("xfer").addEventListener("submit", async e => {
+  e.preventDefault(); if (!S.db) return;
+  const from = S.staff, to = $("xTo").value, ids = xSelected(), note = $("xNote").value.trim();
+  if (!to) { $("xErr").textContent = "กรุณาเลือกเจ้าหน้าที่ที่จะรับงาน"; return; }
+  if (!ids.length) { $("xErr").textContent = "กรุณาเลือกอย่างน้อย 1 โครงการ"; return; }
+  const msg = `โอนงานจาก ${from} ให้ ${to}` + (note ? ` : ${note}` : "");
+  $("xSave").disabled = true; $("xErr").textContent = ""; $("xSave").textContent = "กำลังโอน…";
+  try {
+    if (S.db.transfer) await S.db.transfer({ ids, from, to, note: msg });
+    else {
+      const now = Date.now();
+      for (const id of ids) {
+        const p = S.projects.find(x => x.id === id); if (!p) continue;
+        await S.db.doc("projects/" + id).update({ owner: to, updatedAt: now, updatedBy: S.me || "" });
+        try { await S.db.collection(`projects/${id}/log`).add({ stage: p.stage || "", status: msg, owner: to, staff: from, at: now, by: S.me || "" }); } catch {}
+      }
+    }
+    closeDrawers(); toast(`โอนงาน ${ids.length} โครงการให้ ${to} แล้ว`);
+  } catch (err) {
+    $("xErr").textContent = err && err.code === "bad_action" ? "ต้องอัปเดตโค้ด Apps Script เป็นเวอร์ชันใหม่ก่อน" : (err && err.msg) || "โอนงานไม่สำเร็จ ลองอีกครั้ง";
+  } finally { $("xSave").disabled = false; xSync(); }
+});
+
+// ---------- add staff ----------
+$("addStaffBtn").onclick = () => { $("sName").value = ""; $("sErr").textContent = ""; openDrawer("staffAdd"); $("sName").focus(); };
+$("staffAdd").addEventListener("submit", async e => {
+  e.preventDefault(); if (!S.db) return;
+  const name = $("sName").value.trim().replace(/\s+/g, " ");
+  if (!name) { $("sErr").textContent = "กรุณากรอกชื่อเจ้าหน้าที่"; return; }
+  if (staffList().includes(name)) { $("sErr").textContent = `มีชื่อ ${name} อยู่แล้ว`; return; }
+  $("sSave").disabled = true; $("sErr").textContent = "";
+  try {
+    const list = [...(S.ref.staff || []), name];
+    const ref = S.db.doc("meta/ref");
+    try { await ref.update({ staff: list }); } catch (err) { if (err && err.code === "not_found") await ref.set({ ...S.ref, staff: list }); else throw err; }
+    S.ref = { ...S.ref, staff: list };
+    S.staff = name; try { localStorage.setItem("bsk-staff", name); } catch {}
+    closeDrawers(); render(); toast(`เพิ่ม ${name} แล้ว`);
+  } catch (err) {
+    $("sErr").textContent = err && err.code === "permission_denied" ? "เฉพาะหัวหน้าเท่านั้นที่เพิ่มเจ้าหน้าที่ได้"
+      : err && err.code === "bad_action" ? "ต้องอัปเดตโค้ด Apps Script เป็นเวอร์ชันใหม่ก่อน" : (err && err.msg) || "เพิ่มไม่สำเร็จ ลองอีกครั้ง";
+  } finally { $("sSave").disabled = false; }
 });
 
 // ---------- export ----------
