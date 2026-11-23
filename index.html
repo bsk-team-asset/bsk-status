@@ -18,30 +18,32 @@
 <style>
 /* Layout: sticky header with two tabs (overview / staff). Overview = stage pipeline strip, filters, project table (cards on phone). Staff = name picker, project cards, side drawer forms. */
 :root {
-  --bg: #ffffff; --surface: #ffffff; --fg: #141414; --muted: #8a8a8a; --line: #ebebeb;
-  --accent: #141414; --accent-fg: #ffffff; --accent-soft: #f5f5f5;
-  --plan: #6b5bb0; --plan-bg: #ece9f8;
-  --tor: #a86a12; --tor-bg: #f8eedb;
-  --procure: #1f7a8c; --procure-bg: #dff1f4;
-  --contract: #2d7a45; --contract-bg: #e0f2e6;
-  --done: #5f6880; --done-bg: #eceef3;
-  --issue: #c0392b; --issue-bg: #fbe5e2;
-  --warn: #b25c00; --warn-bg: #fdebd3;
+  /* palette: #F72585 #B5179E #7209B7 #560BAD #480CA8 #3A0CA3 #3F37C9 #4361EE #4895EF #4CC9F0 */
+  --bg: #ffffff; --surface: #ffffff; --fg: #1b1340; --muted: #7d7896; --line: #ece9f5;
+  --accent: #3a0ca3; --accent-fg: #ffffff; --accent-soft: #f2effc;
+  --grad: linear-gradient(90deg, #f72585, #b5179e, #7209b7, #3a0ca3, #4361ee, #4cc9f0);
+  --plan: #f72585; --plan-bg: #fde6f1;
+  --tor: #b5179e; --tor-bg: #f8e4f4;
+  --procure: #7209b7; --procure-bg: #f0e3fa;
+  --contract: #4361ee; --contract-bg: #e5eafd;
+  --done: #1597c4; --done-bg: #e2f6fd;
+  --issue: #e0136f; --issue-bg: #fde6f1;
+  --warn: #9c128a; --warn-bg: #f8e4f4;
   --font-display: "Supermarket", system-ui, sans-serif;
   --font-body: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #101010; --surface: #101010; --fg: #ededed; --muted: #8c8c8c; --line: #262626;
-  --accent: #ededed; --accent-fg: #141414; --accent-soft: #1c1c1c;
-  --plan: #b3a6f0; --plan-bg: #2b2647; --tor: #e8b45e; --tor-bg: #3b2e17;
-  --procure: #74c7d6; --procure-bg: #173a41; --contract: #7fd09a; --contract-bg: #1a3626;
-  --done: #a3abc0; --done-bg: #272d3e; --issue: #f28b7f; --issue-bg: #3f1f1c; --warn: #f0a75a; --warn-bg: #3d2a14; color-scheme: dark; } }
+  --bg: #0e0b22; --surface: #0e0b22; --fg: #eeeaff; --muted: #9b95bd; --line: #2a2452;
+  --accent: #4cc9f0; --accent-fg: #0e0b22; --accent-soft: #1c1840;
+  --plan: #ff4d9d; --plan-bg: #3a1030; --tor: #df4fc9; --tor-bg: #351036;
+  --procure: #a35cf0; --procure-bg: #2a1450; --contract: #6f8cff; --contract-bg: #1a2158;
+  --done: #4cc9f0; --done-bg: #10304a; --issue: #ff4d9d; --issue-bg: #3a1030; --warn: #df4fc9; --warn-bg: #351036; color-scheme: dark; } }
 :root[data-theme="dark"] {
-  --bg: #101010; --surface: #101010; --fg: #ededed; --muted: #8c8c8c; --line: #262626;
-  --accent: #ededed; --accent-fg: #141414; --accent-soft: #1c1c1c;
-  --plan: #b3a6f0; --plan-bg: #2b2647; --tor: #e8b45e; --tor-bg: #3b2e17;
-  --procure: #74c7d6; --procure-bg: #173a41; --contract: #7fd09a; --contract-bg: #1a3626;
-  --done: #a3abc0; --done-bg: #272d3e; --issue: #f28b7f; --issue-bg: #3f1f1c; --warn: #f0a75a; --warn-bg: #3d2a14; color-scheme: dark; }
+  --bg: #0e0b22; --surface: #0e0b22; --fg: #eeeaff; --muted: #9b95bd; --line: #2a2452;
+  --accent: #4cc9f0; --accent-fg: #0e0b22; --accent-soft: #1c1840;
+  --plan: #ff4d9d; --plan-bg: #3a1030; --tor: #df4fc9; --tor-bg: #351036;
+  --procure: #a35cf0; --procure-bg: #2a1450; --contract: #6f8cff; --contract-bg: #1a2158;
+  --done: #4cc9f0; --done-bg: #10304a; --issue: #ff4d9d; --issue-bg: #3a1030; --warn: #df4fc9; --warn-bg: #351036; color-scheme: dark; }
 
 * { box-sizing: border-box; }
 /* Body text in IBM Plex Sans Thai; headings, tabs and big numbers in Supermarket (one weight, so no faux bold) */
@@ -261,6 +263,19 @@ tbody tr:hover td { background: var(--accent-soft); }
   .stage { background: var(--bg); }
   .stage[aria-pressed="true"] { background: var(--accent-soft); }
 }
+
+/* ---- palette accents on the minimal layout ---- */
+header { border-bottom: 0; }
+header::after { content: ""; display: block; height: 3px; background: var(--grad); }
+nav a[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); }
+.btn:not(.ghost) { background: linear-gradient(90deg, #7209b7, #3a0ca3 55%, #4361ee); color: #fff; border: 0; }
+.btn:not(.ghost):hover { filter: brightness(1.1); }
+.stage .n { color: var(--c); }
+.stage[aria-pressed="true"] { background: var(--cb); }
+.steps i.on { background: var(--c); }
+.slist button[aria-current="true"] { color: var(--accent); }
+th { border-bottom-color: var(--accent); }
+.opts input:checked + span { background: var(--c); border-color: var(--c); color: #fff; }
 </style>
 
 <header>
