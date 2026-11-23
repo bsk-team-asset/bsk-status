@@ -169,6 +169,19 @@ td.when { white-space: nowrap; color: var(--muted); font-size: 0.82rem; font-var
 .field .xlist input, .field .xall input { width: 16px; height: 16px; flex: none; }
 .field .xall { justify-self: start; }
 .xlist label > span { flex: 1; min-width: 0; }
+.by { font-size: 0.78rem; color: var(--muted); margin-top: 2px; white-space: nowrap; }
+.pinrow { display: flex; gap: 8px; }
+.pinrow input { flex: 1; min-width: 0; font-variant-numeric: tabular-nums; letter-spacing: .08em; }
+.field .pinadmin input, .pinadmin input { width: 16px; height: 16px; accent-color: var(--accent); }
+.pinok { background: var(--contract-bg); border-radius: 8px; padding: 10px 12px; font-size: 0.9rem; }
+.pinok b { font-size: 1.15rem; letter-spacing: .12em; font-variant-numeric: tabular-nums; user-select: all; }
+.pinlist { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--line); }
+.pinlist li { display: flex; align-items: center; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+.pinlist .nm { flex: 1; min-width: 0; }
+.pinlist .st-ok { color: var(--contract); font-size: 0.82rem; }
+.pinlist .st-no { color: var(--muted); font-size: 0.82rem; }
+.pinlist .hd { font-size: 0.72rem; color: var(--accent); border: 1px solid currentColor; border-radius: 999px; padding: 0 7px; }
+.pinlist button { font: inherit; font-size: 0.8rem; border: 0; background: transparent; color: var(--muted); text-decoration: underline; cursor: pointer; }
 .split { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 20px; align-items: start; }
 .side { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 8px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); max-height: calc(100vh - 110px); overflow-y: auto; }
 .side-h { font-size: 0.78rem; font-weight: 600; color: var(--muted); letter-spacing: .04em; padding: 4px 10px 8px; display: block; }
@@ -340,6 +353,7 @@ th { border-bottom-color: var(--accent); }
         <ul class="slist" id="staffPick"></ul>
         <label class="smobile"><span class="side-h">เลือกชื่อของคุณ</span><select id="staffSel"></select></label>
         <button class="btn ghost sm addstaff" id="addStaffBtn" type="button" hidden>+ เพิ่มเจ้าหน้าที่</button>
+        <button class="btn ghost sm addstaff" id="pinsBtn" type="button" hidden>จัดการรหัสเจ้าหน้าที่</button>
       </aside>
       <div style="display:grid;gap:14px;align-content:start;min-width:0">
         <div class="bar">
@@ -423,6 +437,22 @@ th { border-bottom-color: var(--accent); }
   <div class="actions"><button class="btn" type="submit" id="sSave">เพิ่มเจ้าหน้าที่</button><button class="btn ghost" type="button" data-close>ยกเลิก</button></div>
 </form>
 
+<form class="drawer" id="pins" hidden aria-labelledby="pTitle">
+  <h2 id="pTitle">รหัสเจ้าหน้าที่</h2>
+  <p class="muted" style="margin:0;font-size:0.88rem">แต่ละคนเข้าระบบด้วยรหัสของตัวเอง ทุกการแก้ไขจะบันทึกชื่อคนที่แก้ ระบบเก็บรหัสแบบเข้ารหัส ไม่มีใครเปิดดูรหัสเดิมได้ ถ้าลืมให้ตั้งใหม่</p>
+  <label class="field"><span>เจ้าหน้าที่</span><select id="pName"></select></label>
+  <div class="field"><span>รหัสใหม่ (อย่างน้อย 6 ตัว)</span>
+    <div class="pinrow"><input type="text" id="pPin" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="เช่น 482916"><button class="btn ghost sm" type="button" id="pGen">สุ่มรหัส</button></div>
+    <small>เว้นว่างได้ ถ้าต้องการเปลี่ยนแค่สิทธิ์หัวหน้า</small>
+  </div>
+  <label class="check pinadmin"><input type="checkbox" id="pAdmin"> ให้สิทธิ์หัวหน้า (กำหนดวันส่งมอบ, Export, จัดการรหัส)</label>
+  <p class="err" id="pErr" role="alert"></p>
+  <div class="pinok" id="pOk" hidden></div>
+  <div class="actions" style="margin-top:0"><button class="btn" type="submit" id="pSave">บันทึกรหัส</button></div>
+  <div class="field"><span>สถานะรหัส</span><ul class="pinlist" id="pList"><li class="muted">กำลังโหลด…</li></ul></div>
+  <div class="actions"><button class="btn ghost" type="button" data-close>ปิด</button></div>
+</form>
+
 <div class="toast" id="toast" hidden></div>
 
 <div id="gate" hidden style="position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--bg);padding:16px">
@@ -440,7 +470,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzOxQmm1DNmWkk05eGNZ92K
 /* ======================================================================== */
 (function () {
   let pin = ""; try { pin = localStorage.getItem("bsk-pin") || ""; } catch {}
-  let role = null, cache = { projects: [], ref: null };
+  let role = null, myName = "", cache = { projects: [], ref: null };
   const projL = [], refL = [];
   const mk = d => ({ id: d.id, exists: true, data: () => d, metadata: {} });
   const configured = /^https:\/\/script\.google(usercontent)?\.com\//.test(API_URL);
@@ -459,17 +489,21 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzOxQmm1DNmWkk05eGNZ92K
       f.onsubmit = async ev => {
         ev.preventDefault(); err.textContent = ""; f.querySelector("button").disabled = true;
         pin = inp.value.trim();
-        try { const j = await call("login"); role = j.role; try { localStorage.setItem("bsk-pin", pin); } catch {} box.hidden = true; resolve(); }
+        try { const j = await call("login"); role = j.role; myName = j.name || ""; showMe(); try { localStorage.setItem("bsk-pin", pin); } catch {} box.hidden = true; resolve(); }
         catch (e) { err.textContent = e.code === "permission_denied" ? "รหัสผ่านไม่ถูกต้อง" : (e.msg || "เชื่อมต่อไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง"); }
         finally { f.querySelector("button").disabled = false; }
       };
     });
   }
+  function showMe() {
+    const b = document.getElementById("logoutBtn");
+    if (b && myName) { b.textContent = myName + " | ออกจากระบบ"; b.title = "เข้าระบบในชื่อ " + myName; }
+  }
   let loginP = null;
   function ensureLogin() {
     if (!loginP) loginP = (async () => {
       if (!configured) return gate("ยังไม่ได้ใส่ URL ของ Apps Script ในไฟล์ index.html (บรรทัด API_URL)");
-      if (pin) { try { role = (await call("login")).role; return; } catch (e) { if (e.code !== "permission_denied") return gate(e.msg || "เชื่อมต่อไม่ได้"); } }
+      if (pin) { try { const j = await call("login"); role = j.role; myName = j.name || ""; showMe(); return; } catch (e) { if (e.code !== "permission_denied") return gate(e.msg || "เชื่อมต่อไม่ได้"); } }
       return gate("");
     })();
     return loginP;
@@ -515,8 +549,13 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzOxQmm1DNmWkk05eGNZ92K
     return { async update(data) { await call("update", { id: m[1], fields: data }); await refresh(); } };
   }
   async function transfer(req) { await call("transfer", req); await refresh(); }
-  const db = { collection, doc, transfer };
-  const user = { id: async () => "web", isOwner: async () => role === "admin", canEdit: async () => role === "admin", can: async () => true };
+  const admin = {
+    async list() { return (await call("users")).users; },
+    async setPin(name, newPin, isAdmin) { await call("setPin", { name, newPin, admin: isAdmin }); },
+    async removePin(name) { await call("removePin", { name }); },
+  };
+  const db = { collection, doc, transfer, admin };
+  const user = { staffName: async () => myName, id: async () => "web", isOwner: async () => role === "admin", canEdit: async () => role === "admin", can: async () => true };
   const downloads = { async save({ filename, data }) {
     const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data]));
     const a = document.createElement("a"); a.href = url; a.download = filename; document.body.append(a); a.click(); a.remove();
@@ -671,7 +710,7 @@ function renderOverview() {
     tr.innerHTML = `<td class="title">${esc(p.title)}<div class="type">${esc(p.type)}</div></td>
       <td>${stagePill(p)}</td><td class="status">${esc(p.status) || '<span class="muted">—</span>'}</td>
       <td class="money">${p.budget ? baht(p.budget) : '<span class="muted">—</span>'}${p.method ? `<div class="type">${esc(p.method)}</div>` : ""}</td>
-      <td>${esc(p.owner)}</td><td class="duecell">${dueBadge(p, true)}</td><td class="when">${when(p.updatedAt)}</td>`;
+      <td>${esc(p.owner)}</td><td class="duecell">${dueBadge(p, true)}</td><td class="when">${when(p.updatedAt)}${p.updatedByName ? `<div class="by">โดย ${esc(p.updatedByName)}</div>` : ""}</td>`;
     tr.onclick = () => openDetail(p.id);
     tr.onkeydown = e => { if (e.key === "Enter") openDetail(p.id); };
     tb.append(tr);
@@ -702,6 +741,7 @@ function renderStaff() {
   const cards = $("staffCards"); cards.replaceChildren();
   $("addBtn").disabled = !S.db;
   $("addStaffBtn").hidden = !(S.db && S.canEdit);
+  $("pinsBtn").hidden = !(S.db && S.db.admin && S.canEdit);
   $("transferBtn").hidden = !(S.db && S.staff && S.projects.some(p => p.owner === S.staff));
   if (!S.staff) { $("staffTitle").textContent = "โครงการที่รับผิดชอบ"; cards.innerHTML = `<div class="empty">${S.loaded ? "เลือกชื่อของคุณด้านบน เพื่อดูและอัปเดตโครงการที่รับผิดชอบ" : "กำลังโหลด…"}</div>`; return; }
   const mine = sorted(S.projects.filter(p => p.owner === S.staff));
@@ -761,7 +801,7 @@ dpBuild("uDue"); dpBuild("aDue");
 
 // ---------- drawers ----------
 let lastFocus = null;
-const DRAWERS = ["detail", "upd", "add", "xfer", "staffAdd"];
+const DRAWERS = ["detail", "upd", "add", "xfer", "staffAdd", "pins"];
 function openDrawer(id) { lastFocus = document.activeElement; DRAWERS.forEach(d => $(d).hidden = d !== id); $("scrim").hidden = false; }
 function closeDrawers() { DRAWERS.forEach(d => $(d).hidden = true); $("scrim").hidden = true; lastFocus && lastFocus.focus && lastFocus.focus(); }
 $("scrim").onclick = closeDrawers;
@@ -781,7 +821,7 @@ async function openDetail(id) {
   $("dTitle").textContent = p.title;
   $("dKv").innerHTML = `<dt>ประเภท</dt><dd>${esc(p.type)}</dd><dt>วงเงิน</dt><dd>${p.budget ? baht(p.budget) + " บาท" : "—"}</dd><dt>วิธีการ</dt><dd>${esc(p.method) || "—"}</dd><dt>ผู้รับผิดชอบ</dt><dd>${esc(p.owner)}</dd>
     <dt>สถานะล่าสุด</dt><dd>${esc(p.status) || "—"}</dd>
-    <dt>วันส่งมอบ</dt><dd>${p.due ? `${thDate(p.due)} ${dueBadge(p)}` : '<span class="muted">ยังไม่กำหนด</span>'}</dd><dt>อัปเดต</dt><dd>${when(p.updatedAt)}</dd>`;
+    <dt>วันส่งมอบ</dt><dd>${p.due ? `${thDate(p.due)} ${dueBadge(p)}` : '<span class="muted">ยังไม่กำหนด</span>'}</dd><dt>อัปเดต</dt><dd>${when(p.updatedAt)}${p.updatedByName ? ` โดย ${esc(p.updatedByName)}` : ""}</dd>`;
   $("dUpdate").disabled = !S.db;
   const log = $("dLog"); log.innerHTML = `<li class="muted">กำลังโหลดประวัติ…</li>`;
   openDrawer("detail");
@@ -914,6 +954,53 @@ $("staffAdd").addEventListener("submit", async e => {
   } finally { $("sSave").disabled = false; }
 });
 
+// ---------- personal PINs (GitHub version only: needs db.admin from the Apps Script bridge) ----------
+let pinUsers = [];
+async function loadPins() {
+  const list = $("pList");
+  try {
+    pinUsers = await S.db.admin.list();
+    list.innerHTML = pinUsers.map(u => `<li><span class="nm">${esc(u.name)}</span>${u.admin ? '<span class="hd">หัวหน้า</span>' : ""}
+      <span class="${u.hasPin ? "st-ok" : "st-no"}">${u.hasPin ? "มีรหัสแล้ว" : "ยังไม่มีรหัส"}</span>
+      ${u.hasPin ? `<button type="button" data-rm="${esc(u.name)}">ลบรหัส</button>` : ""}</li>`).join("") || '<li class="muted">ยังไม่มีรายชื่อเจ้าหน้าที่</li>';
+    list.querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => {
+      if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "กดอีกครั้งเพื่อยืนยัน"; return; }
+      b.disabled = true;
+      try { await S.db.admin.removePin(b.dataset.rm); toast(`ลบรหัสของ ${b.dataset.rm} แล้ว`); await loadPins(); }
+      catch (err) { $("pErr").textContent = (err && err.msg) || "ลบไม่สำเร็จ"; b.disabled = false; }
+    });
+    const u = pinUsers.find(x => x.name === $("pName").value); $("pAdmin").checked = !!(u && u.admin);
+  } catch (err) { list.innerHTML = `<li class="err">${esc(err && err.code === "bad_action" ? "ต้องอัปเดตโค้ด Apps Script เป็นเวอร์ชันใหม่ก่อน" : (err && err.msg) || "โหลดไม่สำเร็จ")}</li>`; }
+}
+$("pinsBtn").onclick = () => {
+  fillSelect($("pName"), staffList(), "— เลือกเจ้าหน้าที่ —");
+  $("pPin").value = ""; $("pErr").textContent = ""; $("pOk").hidden = true; $("pAdmin").checked = false;
+  openDrawer("pins"); loadPins();
+};
+$("pName").onchange = () => { const u = pinUsers.find(x => x.name === $("pName").value); $("pAdmin").checked = !!(u && u.admin); $("pOk").hidden = true; };
+$("pGen").onclick = () => {
+  const a = new Uint32Array(1); crypto.getRandomValues(a);
+  $("pPin").value = String(a[0] % 1000000).padStart(6, "0");
+};
+$("pins").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = $("pName").value, pin = $("pPin").value.trim(), admin = $("pAdmin").checked;
+  $("pErr").textContent = ""; $("pOk").hidden = true;
+  if (!name) { $("pErr").textContent = "กรุณาเลือกเจ้าหน้าที่"; return; }
+  if (pin && pin.length < 6) { $("pErr").textContent = "รหัสต้องยาวอย่างน้อย 6 ตัว"; return; }
+  $("pSave").disabled = true;
+  try {
+    await S.db.admin.setPin(name, pin, admin);
+    $("pOk").hidden = false;
+    $("pOk").innerHTML = pin
+      ? `ตั้งรหัสให้ ${esc(name)} แล้ว: <b>${esc(pin)}</b><br>แจ้งรหัสนี้ให้ ${esc(name)} ตอนนี้ ระบบจะไม่แสดงรหัสนี้อีก`
+      : `บันทึกสิทธิ์ของ ${esc(name)} แล้ว`;
+    $("pPin").value = ""; await loadPins();
+  } catch (err) {
+    $("pErr").textContent = err && err.code === "bad_action" ? "ต้องอัปเดตโค้ด Apps Script เป็นเวอร์ชันใหม่ก่อน" : (err && err.msg) || "บันทึกไม่สำเร็จ ลองอีกครั้ง";
+  } finally { $("pSave").disabled = false; }
+});
+
 // ---------- export ----------
 const csvCell = v => { v = v == null ? "" : String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
 $("exportBtn").onclick = async () => {
@@ -941,6 +1028,10 @@ async function start() {
   S.db = db; S.user = user;
   if (!db) { S.loaded = true; note("เชื่อมต่อ Apps Script ไม่ได้ ตรวจ URL ในไฟล์ index.html"); render(); return; }
   try { S.me = user ? await user.id() : null; } catch {}
+  try {  // GitHub version: open the staff page on the signed-in person's own name
+    const mine = user && user.staffName ? await user.staffName() : "";
+    if (mine && mine !== "ผู้ดูแลระบบ" && mine !== "รหัสส่วนกลาง") { S.staff = mine; try { localStorage.setItem("bsk-staff", mine); } catch {} }
+  } catch {}
   try { if (user && ((await user.isOwner()) || (await user.canEdit()))) { S.canEdit = true; $("exportBtn").hidden = false; } } catch {}
   try { if (user && (await user.can("data.write")) === false) note("คุณดูได้อย่างเดียว ถ้าต้องการอัปเดตงาน ขอสิทธิ์ Contributor จากเจ้าของระบบ"); } catch {}
   const timer = setTimeout(() => { if (!S.loaded) { S.loaded = true; note("โหลดข้อมูลช้ากว่าปกติ ข้อมูลจะขึ้นเองเมื่อเชื่อมต่อได้"); render(); } }, 10000);
