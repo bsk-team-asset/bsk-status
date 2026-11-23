@@ -286,7 +286,7 @@ th { border-bottom-color: var(--accent); }
       <button class="theme logout" id="logoutBtn" type="button">ออกจากระบบ</button>
       <nav aria-label="หน้า">
         <a href="#overview" id="navOverview">โครงการรวม</a>
-        <a href="#staff" id="navStaff">เจ้าหน้าที่อัปเดตงาน</a>
+        <a href="#staff" id="navStaff">เจ้าหน้าที่</a>
       </nav>
     </div>
   </div>
@@ -615,7 +615,7 @@ function renderOverview() {
   $("count").textContent = `แสดง ${rows.length} จาก ${P.length} โครงการ | วงเงินรวม ${baht(sum)} บาท` + (withB < rows.length ? ` (ระบุแล้ว ${withB} โครงการ)` : "");
   const tb = $("tbody"); tb.replaceChildren();
   if (!rows.length) {
-    const tr = document.createElement("tr"); tr.innerHTML = `<td colspan="7" class="muted" style="text-align:center;padding:28px">${S.loaded ? (P.length ? "ไม่พบโครงการตามตัวกรองนี้" : "ยังไม่มีโครงการ เพิ่มได้จากหน้าเจ้าหน้าที่อัปเดตงาน") : "กำลังโหลดโครงการ…"}</td>`;
+    const tr = document.createElement("tr"); tr.innerHTML = `<td colspan="7" class="muted" style="text-align:center;padding:28px">${S.loaded ? (P.length ? "ไม่พบโครงการตามตัวกรองนี้" : "ยังไม่มีโครงการ เพิ่มได้จากหน้าเจ้าหน้าที่") : "กำลังโหลดโครงการ…"}</td>`;
     tr.style.cursor = "default"; tb.append(tr); return;
   }
   rows.forEach((p, i) => {
