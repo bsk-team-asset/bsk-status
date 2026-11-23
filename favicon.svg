@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- original icon: cream tabby cat face with big round glasses -->
+  <g stroke="#2a1c14" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M10 30 L12 6 L28 18 Z" fill="#fff4ea"/>
+    <path d="M54 30 L52 6 L36 18 Z" fill="#fff4ea"/>
+    <path d="M14 22 L15 11 L23 18 Z" fill="#f5a3a6" stroke="none"/>
+    <path d="M50 22 L49 11 L41 18 Z" fill="#f5a3a6" stroke="none"/>
+    <ellipse cx="32" cy="37" rx="25" ry="21" fill="#fff4ea"/>
+  </g>
+  <g fill="#f0a35a">
+    <path d="M28 17.5 q4 -1.5 8 0 l-1 5 q-3 -1 -6 0 Z"/>
+    <path d="M17 22 q4 -2 7 -1 l-1 4 q-3 0 -5.5 1.5 Z"/>
+    <path d="M47 22 q-4 -2 -7 -1 l1 4 q3 0 5.5 1.5 Z"/>
+  </g>
+  <g stroke="#141414" stroke-width="3.6" fill="#ffffff">
+    <circle cx="21.5" cy="37" r="9.5"/>
+    <circle cx="42.5" cy="37" r="9.5"/>
+    <path d="M31 36 q1 -1.6 2 0" fill="none"/>
+    <path d="M12 35 L7.5 33.5 M52 35 L56.5 33.5" fill="none"/>
+  </g>
+  <circle cx="21.5" cy="37.5" r="5.4" fill="#141414"/>
+  <circle cx="42.5" cy="37.5" r="5.4" fill="#141414"/>
+  <circle cx="19.6" cy="35.4" r="1.8" fill="#ffffff"/>
+  <circle cx="40.6" cy="35.4" r="1.8" fill="#ffffff"/>
+  <path d="M30.2 48.2 h3.6 l-1.8 2.2 Z" fill="#f08a95" stroke="#2a1c14" stroke-width="1" stroke-linejoin="round"/>
+  <path d="M28.2 51.6 q1.9 1.9 3.8 0 q1.9 1.9 3.8 0" fill="none" stroke="#2a1c14" stroke-width="1.6" stroke-linecap="round"/>
+</svg>
