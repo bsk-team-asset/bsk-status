@@ -307,12 +307,12 @@ th { border-bottom-color: var(--accent); }
         <select id="fType" aria-label="ประเภท"></select>
         <select id="fOwner" aria-label="ผู้รับผิดชอบ"></select>
         <select id="fMethod" aria-label="วิธีการ"></select>
-        <select id="fSort" aria-label="เรียงลำดับ"><option value="">เรียงตามลำดับในชีต</option><option value="due">เรียงตามวันส่งมอบที่ใกล้ที่สุด</option><option value="budget">เรียงตามวงเงินมากไปน้อย</option></select>
+        <select id="fSort" aria-label="เรียงลำดับ"><option value="">เรียงตามอัปเดตล่าสุด</option><option value="due">เรียงตามวันส่งมอบที่ใกล้ที่สุด</option><option value="budget">เรียงตามวงเงินมากไปน้อย</option><option value="order">เรียงตามลำดับในชีต</option></select>
         <span class="count" id="count"></span>
       </div>
       <div class="tablebox">
         <table>
-          <thead><tr><th>#</th><th>โครงการ</th><th>ขั้นตอน</th><th>สถานะล่าสุด</th><th>วงเงิน / วิธีการ</th><th>ผู้รับผิดชอบ</th><th>วันส่งมอบ</th><th>อัปเดต</th></tr></thead>
+          <thead><tr><th>โครงการ</th><th>ขั้นตอน</th><th>สถานะล่าสุด</th><th>วงเงิน / วิธีการ</th><th>ผู้รับผิดชอบ</th><th>วันส่งมอบ</th><th>อัปเดต</th></tr></thead>
           <tbody id="tbody"></tbody>
         </table>
       </div>
@@ -580,7 +580,10 @@ function filtered() {
     (!S.stage || (S.stage === "due" ? isDueAlert(p) : S.stage === "none" ? !SI.hasOwnProperty(p.stage) : p.stage === S.stage)) &&
     (!S.type || p.type === S.type) && (!S.owner || p.owner === S.owner) && (!S.method || (S.method === "-" ? !p.method : p.method === S.method)) &&
     (!q || (p.title + " " + p.status).toLowerCase().includes(q)))
-    .sort((a, b) => S.sort === "budget" ? ((Number(b.budget) || -1) - (Number(a.budget) || -1)) : S.sort === "due" ? ((a.due && a.stage !== "done" ? daysLeft(a) : 1e9) - (b.due && b.stage !== "done" ? daysLeft(b) : 1e9)) : 0);
+    .sort((a, b) => S.sort === "budget" ? ((Number(b.budget) || -1) - (Number(a.budget) || -1))
+      : S.sort === "due" ? ((a.due && a.stage !== "done" ? daysLeft(a) : 1e9) - (b.due && b.stage !== "done" ? daysLeft(b) : 1e9))
+      : S.sort === "order" ? 0
+      : ((b.updatedAt || 0) - (a.updatedAt || 0)));  // default: most recently updated first
 }
 function fillSelect(sel, items, allLabel, counts) {
   const v = sel.value; sel.replaceChildren(new Option(allLabel, ""));
@@ -612,12 +615,12 @@ function renderOverview() {
   $("count").textContent = `แสดง ${rows.length} จาก ${P.length} โครงการ | วงเงินรวม ${baht(sum)} บาท` + (withB < rows.length ? ` (ระบุแล้ว ${withB} โครงการ)` : "");
   const tb = $("tbody"); tb.replaceChildren();
   if (!rows.length) {
-    const tr = document.createElement("tr"); tr.innerHTML = `<td colspan="8" class="muted" style="text-align:center;padding:28px">${S.loaded ? (P.length ? "ไม่พบโครงการตามตัวกรองนี้" : "ยังไม่มีโครงการ เพิ่มได้จากหน้าเจ้าหน้าที่อัปเดตงาน") : "กำลังโหลดโครงการ…"}</td>`;
+    const tr = document.createElement("tr"); tr.innerHTML = `<td colspan="7" class="muted" style="text-align:center;padding:28px">${S.loaded ? (P.length ? "ไม่พบโครงการตามตัวกรองนี้" : "ยังไม่มีโครงการ เพิ่มได้จากหน้าเจ้าหน้าที่อัปเดตงาน") : "กำลังโหลดโครงการ…"}</td>`;
     tr.style.cursor = "default"; tb.append(tr); return;
   }
   rows.forEach((p, i) => {
     const tr = document.createElement("tr"); tr.tabIndex = 0;
-    tr.innerHTML = `<td class="num">${i + 1}</td><td class="title">${esc(p.title)}<div class="type">${esc(p.type)}</div></td>
+    tr.innerHTML = `<td class="title">${esc(p.title)}<div class="type">${esc(p.type)}</div></td>
       <td>${stagePill(p)}</td><td class="status">${esc(p.status) || '<span class="muted">—</span>'}</td>
       <td class="money">${p.budget ? baht(p.budget) : '<span class="muted">—</span>'}${p.method ? `<div class="type">${esc(p.method)}</div>` : ""}</td>
       <td>${esc(p.owner)}</td><td class="duecell">${dueBadge(p, true)}</td><td class="when">${when(p.updatedAt)}</td>`;
