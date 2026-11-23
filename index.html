@@ -52,6 +52,7 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; mar
 h1 small { display: block; font-family: var(--font-body); font-weight: 400; font-size: 0.8rem; color: var(--muted); }
 nav { display: flex; gap: 4px; }
 .theme { font: inherit; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; margin-left: auto; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; order: 2; }
+#themeBtn { padding: 0; width: 38px; height: 38px; justify-content: center; }
 .theme svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .head nav { order: 3; }
 @media (min-width: 721px) { .head nav { order: 1; margin-left: auto; } .theme { margin-left: 0; } }
@@ -216,7 +217,7 @@ dl.kv dd { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
   <div class="wrap">
     <div class="head">
       <h1>สถานะงาน บสก.<small id="sub">กำลังโหลดข้อมูล…</small></h1>
-      <button class="theme" id="themeBtn" type="button" aria-label="เปลี่ยนโหมดสี"><svg id="themeIcon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"></svg><span id="themeLbl">กลางวัน</span></button>
+      <button class="theme" id="themeBtn" type="button" aria-label="เปลี่ยนโหมดสี"><svg id="themeIcon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"></svg></button>
       <button class="theme logout" id="logoutBtn" type="button">ออกจากระบบ</button>
       <nav aria-label="หน้า">
         <a href="#overview" id="navOverview">โครงการรวม</a>
@@ -484,8 +485,10 @@ if (theme !== "light" && theme !== "dark") theme = matchMedia("(prefers-color-sc
 function applyTheme() {
   const t = THEMES.find(x => x.key === theme) || THEMES[0];
   document.documentElement.setAttribute("data-theme", t.key);
-  $("themeIcon").innerHTML = t.icon; $("themeLbl").textContent = t.label;
-  $("themeBtn").title = "โหมดสี: " + t.label + " (กดเพื่อเปลี่ยน)";
+  $("themeIcon").innerHTML = t.icon;
+  const next = t.key === "light" ? "กลางคืน" : "กลางวัน";
+  $("themeBtn").title = "โหมด" + t.label + " (กดเพื่อเปลี่ยนเป็นโหมด" + next + ")";
+  $("themeBtn").setAttribute("aria-label", "โหมด" + t.label + " กดเพื่อเปลี่ยนเป็นโหมด" + next);
 }
 $("themeBtn").onclick = () => {
   theme = THEMES[(THEMES.findIndex(x => x.key === theme) + 1) % THEMES.length].key;
