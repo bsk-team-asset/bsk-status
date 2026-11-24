@@ -1319,7 +1319,7 @@ function fillWordForm(doc, projects) {
     rows.push(groupTpl.replace(/(<w:t>)[^<]*(<\/w:t>)/, (m, a, b) => a + x(type) + b));
     items.forEach((p, i) => {
       const status = String(p.status || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-      const vals = [[String(i + 1), false], [[p.title], true], [status.length ? status : ["-"], false], [[p.owner || "-"], false]];
+      const vals = [[String(i + 1), false], [[p.title], true], [[p.fund || "-"], false], [status.length ? status : ["-"], false], [[p.owner || "-"], false]];
       let row = dataTpl;
       tcs.forEach((tc, k) => { const [v, plain] = vals[k]; row = row.replace(tc, () => fillCell(tc, Array.isArray(v) ? v : [v], plain)); });
       rows.push(row);
@@ -1368,11 +1368,11 @@ function formGroups(projects) {
   return order.map(type => ({ type, items: projects.filter(p => p.type === type).sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9)) })).filter(g => g.items.length);
 }
 // px at 96 dpi: A4 = 794 x 1123; margins and widths follow the Word form (twips / 15)
-const PDF = { W: 794, H: 1123, top: 76, bottom: 96, numTop: 38, cols: [61, 260, 227, 123] };
+const PDF = { W: 794, H: 1123, top: 76, bottom: 96, numTop: 38, cols: [61, 200, 130, 180, 100] };
 function pdfPage(n) {
   const page = document.createElement("div"); page.className = "pdfpage";
   page.innerHTML = `<div class="pdfnum">- ${n} -</div><table class="pdftbl"><colgroup>${PDF.cols.map(w => `<col style="width:${w}px">`).join("")}</colgroup>
-    <thead><tr><th>ลำดับ</th><th>รายการ</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th></tr></thead><tbody></tbody></table>`;
+    <thead><tr><th>ลำดับ</th><th>รายการ</th><th>แหล่งเงิน</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th></tr></thead><tbody></tbody></table>`;
   return page;
 }
 async function buildPdfPages(projects, host) {
@@ -1390,11 +1390,11 @@ async function buildPdfPages(projects, host) {
     body = page.querySelector("tbody"); if (carry) body.append(carry); body.append(tr);
   };
   for (const g of formGroups(projects)) {
-    const gr = document.createElement("tr"); gr.className = "grp"; gr.innerHTML = `<td colspan="4">${esc(g.type)}</td>`; add(gr);
+    const gr = document.createElement("tr"); gr.className = "grp"; gr.innerHTML = `<td colspan="5">${esc(g.type)}</td>`; add(gr);
     g.items.forEach((p, i) => {
       const lines = String(p.status || "").split(/\r?\n/).map(t => t.trim()).filter(Boolean);
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td class="c">${i + 1}</td><td>${esc(p.title)}</td><td>${(lines.length ? lines : ["-"]).map(esc).join("<br>")}</td><td class="own">${esc(p.owner || "-")}</td>`;
+      tr.innerHTML = `<td class="c">${i + 1}</td><td>${esc(p.title)}</td><td class="c">${esc(p.fund || "-")}</td><td>${(lines.length ? lines : ["-"]).map(esc).join("<br>")}</td><td class="own">${esc(p.owner || "-")}</td>`;
       add(tr);
     });
   }
