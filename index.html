@@ -1051,9 +1051,15 @@ $("exportWordBtn").onclick = async () => {
     const dl = await claude.use("downloads");
     if (!dl) throw new Error("no-downloads");
     await loadJSZip();
-    const res = await fetch("form-template.docx");
-    if (!res.ok) throw new Error("no-template");
-    const zip = await JSZip.loadAsync(await res.arrayBuffer());
+    let tpl;
+    const res = await fetch("form-template.docx").catch(() => null);
+    if (res && res.ok) tpl = await res.arrayBuffer();
+    else {  // claude.ai cannot host .docx files, so the template also ships as base64 JSON
+      const j = await fetch("form-template.json").then(r => r.ok ? r.json() : null).catch(() => null);
+      if (!j || !j.b64) throw new Error("no-template");
+      tpl = Uint8Array.from(atob(j.b64), c => c.charCodeAt(0));
+    }
+    const zip = await JSZip.loadAsync(tpl);
     const doc = await zip.file("word/document.xml").async("string");
     zip.file("word/document.xml", fillWordForm(doc, filtered()));
     const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
