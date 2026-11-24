@@ -369,7 +369,9 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 .btn { border-radius: 12px; font-weight: 500; }
 .btn:not(.ghost) { background: linear-gradient(135deg, var(--accent-2), var(--accent)); color: #fff; border: 0; box-shadow: 0 8px 20px rgba(123,92,240,.26); }
 .btn.ghost { background: var(--glass-strong); border: 1px solid var(--glass-line); color: var(--fg); box-shadow: none; }
-.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.kpi.alert.paid b { color: var(--contract); }
+.kpi.alert.paid[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--contract), var(--shadow); }
 .kpi { border-radius: 20px; padding: 16px 18px; display: grid; gap: 2px; text-align: left; font: inherit; color: var(--fg); }
 .kpi span { font-size: .82rem; color: var(--muted); }
 .kpi b { font-family: var(--font-display); font-weight: 400; font-size: 2.1rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
@@ -452,6 +454,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
   .foot-btns .logout { flex: none; }
   .topbar h1 { font-size: 1.6rem; }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .kpi.paid { grid-column: 1 / -1; }
   .kpi b { font-size: 1.7rem; }
   .splitview { grid-template-columns: 1fr; }
   .pane { display: none; }
@@ -956,10 +959,11 @@ function route() {
 addEventListener("hashchange", route);
 
 // ---------- overview ----------
+const isPaid = p => p.progress === "paid";
 function filtered() {
   const q = S.q.trim().toLowerCase();
   return sorted(S.projects).filter(p =>
-    (!S.stage || (S.stage === "due" ? isDueAlert(p) : S.stage === "none" ? !SI.hasOwnProperty(p.stage) : p.stage === S.stage)) &&
+    (!S.stage || (S.stage === "due" ? isDueAlert(p) : S.stage === "paid" ? isPaid(p) : S.stage === "none" ? !SI.hasOwnProperty(p.stage) : p.stage === S.stage)) &&
     (!S.type || p.type === S.type) && (!S.owner || p.owner === S.owner) && (!S.method || (S.method === "-" ? !p.method : p.method === S.method)) && (!S.fund || (S.fund === "-" ? !p.fund : p.fund === S.fund)) &&
     (!q || (p.title + " " + p.status).toLowerCase().includes(q)))
     .sort((a, b) => S.sort === "budget" ? ((Number(b.budget) || -1) - (Number(a.budget) || -1))
@@ -998,7 +1002,7 @@ function renderOverview() {
   const P = S.projects;
   const pipe = $("pipe"); pipe.replaceChildren();
   const blocks = STAGES.map(s => ({ key: s.key, label: s.label, n: P.filter(p => p.stage === s.key).length, vars: stageVars(s.key) }))
-    .concat([...(P.some(p => !SI.hasOwnProperty(p.stage)) ? [{ key: "none", label: NOSTAGE.label, n: P.filter(p => !SI.hasOwnProperty(p.stage)).length, vars: stageVars("none") }] : []), { key: "due", label: "เกิน / ครบกำหนดใน 7 วัน", n: P.filter(isDueAlert).length, vars: "--c: var(--warn); --cb: var(--warn-bg)" }]);
+    .concat([...(P.some(p => !SI.hasOwnProperty(p.stage)) ? [{ key: "none", label: NOSTAGE.label, n: P.filter(p => !SI.hasOwnProperty(p.stage)).length, vars: stageVars("none") }] : []), { key: "due", label: "เกิน / ครบกำหนดใน 7 วัน", n: P.filter(isDueAlert).length, vars: "--c: var(--warn); --cb: var(--warn-bg)" }, { key: "paid", label: "เบิกจ่ายแล้ว", n: P.filter(isPaid).length, vars: "--c: var(--contract); --cb: var(--contract-bg)" }]);
   for (const b of blocks) {
     const el = document.createElement("button"); el.type = "button"; el.className = "stage"; el.style.cssText = b.vars;
     el.setAttribute("aria-pressed", String(S.stage === b.key));
@@ -1052,12 +1056,15 @@ function renderKpis(P) {
   const withB = P.filter(p => Number(p.budget) > 0), sum = withB.reduce((t, p) => t + Number(p.budget), 0);
   const short = v => v >= 1e6 ? `${(v / 1e6).toLocaleString("th-TH", { maximumFractionDigits: 1 })} ล้าน` : baht(v);
   const money = short(sum), awSum = P.reduce((t, p) => t + (Number(p.awarded) || 0), 0);
+  const paid = P.filter(isPaid), paidSum = paid.reduce((t, p) => t + (Number(p.awarded) || Number(p.budget) || 0), 0);
   $("kpis").innerHTML = `
     <div class="kpi glass"><span>โครงการทั้งหมด</span><b>${total}</b><small>อัปเดตใน 7 วัน ${week} โครงการ</small></div>
     <div class="kpi glass"><span>ลงนาม / บริหารสัญญา</span><b>${contract}</b><small>${total ? Math.round(contract / total * 100) : 0}% ของทั้งหมด</small></div>
     <button type="button" class="kpi glass alert" id="kpiDue" aria-pressed="${S.stage === "due"}"><span>เกิน / ครบกำหนดใน 7 วัน</span><b>${alert}</b><small>${alert ? "กดเพื่อดูรายการ" : "ไม่มีงานเร่ง"}</small></button>
     <div class="kpi glass"><span>วงเงินงบประมาณรวม (บาท)</span><b>${money}</b><small>${awSum ? `จัดซื้อ/จ้างแล้ว ${short(awSum)} บาท` : `ระบุแล้ว ${withB.length} จาก ${total} โครงการ`}</small></div>`;
   $("kpiDue").onclick = () => { S.stage = S.stage === "due" ? null : "due"; render(); };
+  $("kpis").insertAdjacentHTML("beforeend", `<button type="button" class="kpi glass alert paid" id="kpiPaid" aria-pressed="${S.stage === "paid"}"><span>เบิกจ่ายแล้ว</span><b>${paid.length}</b><small>${paid.length ? `รวม ${short(paidSum)} บาท` : "ยังไม่มีโครงการที่เบิกจ่าย"}</small></button>`);
+  $("kpiPaid").onclick = () => { S.stage = S.stage === "paid" ? null : "paid"; render(); };
   const seg = STAGES.map(s => [s.key, P.filter(p => p.stage === s.key).length]);
   const other = total - seg.reduce((t, x) => t + x[1], 0);
   if (other > 0) seg.push(["none", other]);
