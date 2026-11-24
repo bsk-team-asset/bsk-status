@@ -402,7 +402,14 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 .pr { grid-row: 1 / span 2; grid-column: 2; display: grid; align-content: center; justify-items: end; gap: 2px; font-size: .78rem; color: var(--muted); white-space: nowrap; }
 .pm { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: .8rem; color: var(--muted); min-width: 0; }
 .pm .pill { font-size: .78rem; }
-.pm .amt b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.pm .own b { color: var(--fg); font-weight: 500; }
+.pf { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
+.pf > span { display: grid; align-content: start; gap: 1px; min-width: 0; font-size: .8rem; background: var(--accent-soft); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; }
+.pf i { font-style: normal; font-size: .72rem; color: var(--muted); }
+.pf b { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--fg); }
+.pf .due { font-size: .72rem; justify-self: start; }
+.ps { grid-column: 1 / -1; font-size: .82rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 520px) { .pf { grid-template-columns: 1fr 1fr; } .pf > span:last-child { grid-column: 1 / -1; } }
 .plist-empty, .pane-empty { padding: 36px 16px; text-align: center; color: var(--muted); }
 .pane { border-radius: 22px; padding: 22px; display: grid; gap: 16px; position: sticky; top: calc(20px + env(safe-area-inset-top, 0px)); max-height: calc(100vh - 40px); overflow-y: auto; }
 .pane .tag { font-size: .78rem; color: var(--muted); }
@@ -953,7 +960,13 @@ function renderOverview() {
     const r = document.createElement("div"); r.className = "prow" + (p.id === S.sel ? " sel" : ""); r.tabIndex = 0; r.setAttribute("role", "listitem");
     r.innerHTML = `<div class="pt">${esc(p.title)}</div>
       <div class="pr"><span>${when(p.updatedAt)}</span>${p.updatedByName ? `<span>โดย ${esc(p.updatedByName)}</span>` : ""}</div>
-      <div class="pm">${stagePill(p)}<span>${esc(p.owner || "-")}</span><span class="amt">จัดซื้อ/จ้าง ${Number(p.awarded) > 0 ? `<b>${baht(p.awarded)}</b> บาท` : "<b>—</b>"}</span>${p.due ? dueBadge(p) : ""}</div>`;
+      <div class="pm">${stagePill(p)}<span class="own">ผู้รับผิดชอบ <b>${esc(p.owner || "—")}</b></span></div>
+      <div class="pf">
+        <span><i>วงเงินงบประมาณ</i><b>${Number(p.budget) > 0 ? baht(p.budget) + " บาท" : "—"}</b></span>
+        <span><i>วงเงินซื้อ/จ้าง</i><b>${Number(p.awarded) > 0 ? baht(p.awarded) + " บาท" : "—"}</b></span>
+        <span><i>ครบกำหนดส่งมอบ</i><b>${p.due ? thDate(p.due) : "ยังไม่กำหนด"}</b>${p.due ? " " + dueBadge(p) : ""}</span>
+      </div>
+      ${p.status ? `<div class="ps">${esc(p.status)}</div>` : ""}`;
     const pick = () => { if (narrow()) { openDetail(p.id); return; } S.sel = p.id; tb.querySelectorAll(".prow").forEach(x => x.classList.toggle("sel", x === r)); renderPane(p); };
     r.onclick = pick; r.onkeydown = e => { if (e.key === "Enter") pick(); };
     tb.append(r);
