@@ -574,7 +574,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 
 <form class="drawer" id="upd" hidden aria-labelledby="uTitle">
   <h2 id="uTitle">อัปเดตสถานะ</h2>
-  <p class="muted" id="uProj" style="margin:0;font-size:0.9rem"></p>
+  <label class="field"><span>ชื่อโครงการ</span><textarea id="uName" maxlength="300" rows="2" style="min-height:0"></textarea></label>
   <div class="field"><span>ขั้นตอน</span><div class="opts" id="uStages"></div></div>
   <label class="field"><span>สถานะล่าสุด</span>
     <textarea id="uStatus" maxlength="600" placeholder="เช่น ตรวจรับงานงวด 2 เมื่อ 29 ตุลาคม 2569"></textarea>
@@ -1202,7 +1202,7 @@ $("dUpdate").onclick = () => openUpdate(S.editing);
 function openUpdate(id) {
   const p = S.projects.find(x => x.id === id); if (!p) return;
   S.editing = id;
-  $("uProj").textContent = p.title;
+  $("uName").value = p.title || "";
   document.querySelectorAll('input[name="uStage"]').forEach(r => r.checked = r.value === p.stage);
   $("uStatus").value = p.status || ""; dpSet("uDue", p.due || "");
   dpDisable("uDue", false);
@@ -1222,6 +1222,9 @@ $("upd").addEventListener("submit", async e => {
     owner: $("uOwner").value || p.owner, budget: parseBaht($("uBudget").value), awarded: parseBaht($("uAwarded").value), method: $("uMethod").value || "", fund: $("uFund").value || "",
     updatedAt: Date.now(), updatedBy: S.me || "" };
   if (Number.isNaN(data.budget) || Number.isNaN(data.awarded)) { $("uErr").textContent = "วงเงินต้องเป็นตัวเลข เช่น 1,250,000"; return; }
+  const title = $("uName").value.trim().replace(/\s+/g, " ");
+  if (!title) { $("uErr").textContent = "กรุณากรอกชื่อโครงการ"; return; }
+  if (title !== p.title) data.title = title;
   if (!data.status) { $("uErr").textContent = "กรุณากรอกสถานะล่าสุด"; return; }
   if ($("uType").value === NEW_TYPE && !$("uTypeNew").value.trim()) { $("uErr").textContent = "กรุณาพิมพ์ชื่อประเภทงานใหม่"; return; }
   $("uSave").disabled = true; $("uErr").textContent = "";
