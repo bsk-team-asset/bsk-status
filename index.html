@@ -586,6 +586,8 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
     <label class="field"><span>วงเงินงบประมาณ (บาท)</span><input type="text" id="uBudget" inputmode="decimal" placeholder="เช่น 1,250,000"></label>
     <label class="field"><span>วงเงินที่จัดซื้อ/จ้าง (บาท)</span><input type="text" id="uAwarded" inputmode="decimal" placeholder="เช่น 1,190,000"></label>
   </div>
+  <div class="field"><span>ประเภทงาน</span><select id="uType" aria-label="ประเภทงาน"></select>
+    <input type="text" id="uTypeNew" maxlength="60" placeholder="พิมพ์ชื่อประเภทงานใหม่ เช่น งานซ่อมบำรุง" hidden></div>
   <label class="field"><span>วิธีการ</span><select id="uMethod"></select></label>
   <label class="field"><span>แหล่งเงิน</span><select id="uFund"><option value="">— ยังไม่ระบุ —</option><option value="เงินงบประมาณ">เงินงบประมาณ</option><option value="เงินนอกงบประมาณ">เงินนอกงบประมาณ</option></select></label>
   <label class="field"><span>ผู้รับผิดชอบ</span><select id="uOwner"></select></label>
@@ -596,7 +598,8 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 <form class="drawer" id="add" hidden aria-labelledby="aTitle">
   <h2 id="aTitle">เพิ่มโครงการใหม่</h2>
   <label class="field"><span>ชื่อโครงการ</span><textarea id="aName" maxlength="300" required placeholder="เช่น จ้างปรับปรุงซ่อมแซมห้องน้ำ ชั้น 2 โซน A"></textarea></label>
-  <label class="field"><span>ประเภท</span><select id="aType"></select></label>
+  <div class="field"><span>ประเภทงาน</span><select id="aType" aria-label="ประเภทงาน"></select>
+    <input type="text" id="aTypeNew" maxlength="60" placeholder="พิมพ์ชื่อประเภทงานใหม่ เช่น งานซ่อมบำรุง" hidden></div>
   <label class="field"><span>ผู้รับผิดชอบ</span><select id="aOwner"></select></label>
   <div class="field"><span>ขั้นตอน</span><div class="opts" id="aStages"></div></div>
   <div class="pair2">
@@ -788,13 +791,14 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzOxQmm1DNmWkk05eGNZ92K
   }
   async function transfer(req) { await call("transfer", req); await refresh(); }
   async function deleteProject(id) { await call("deleteProject", { id }); await refresh(); }
+  async function addType(name) { await call("addType", { name }); }
   const admin = {
     async list() { return (await call("users")).users; },
     async setPin(name, newPin, isAdmin) { await call("setPin", { name, newPin, admin: isAdmin }); },
     async removePin(name) { await call("removePin", { name }); },
     async removeStaff(name) { await call("removeStaff", { name }); await refresh(); },
   };
-  const db = { collection, doc, transfer, deleteProject, admin };
+  const db = { collection, doc, transfer, deleteProject, addType, admin };
   const user = { staffName: async () => myName, id: async () => "web", isOwner: async () => role === "admin", canEdit: async () => role === "admin", can: async () => true };
   const downloads = { async save({ filename, data }) {
     const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data]));
@@ -921,6 +925,24 @@ function fillSelect(sel, items, allLabel, counts) {
   const v = sel.value; sel.replaceChildren(new Option(allLabel, ""));
   items.forEach(i => sel.append(new Option(counts ? `${i} (${counts[i] || 0})` : i, i)));
   sel.value = items.includes(v) ? v : "";
+}
+const NEW_TYPE = "__new__";
+function fillTypeSelect(sel, input, current) {
+  fillSelect(sel, typeList(), "— เลือกประเภทงาน —");
+  sel.append(new Option("+ เพิ่มประเภทใหม่…", NEW_TYPE));
+  sel.value = current || ""; input.value = ""; input.hidden = true;
+  sel.onchange = () => { input.hidden = sel.value !== NEW_TYPE; if (!input.hidden) input.focus(); };
+}
+/** Chosen type, or the typed new one (saved to the shared list; the project keeps it either way). */
+async function pickType(sel, input) {
+  if (sel.value !== NEW_TYPE) return sel.value;
+  const name = input.value.trim().replace(/\s+/g, " ");
+  if (!name) return "";
+  if (!typeList().includes(name) && S.db && S.db.addType) {
+    try { await S.db.addType(name); } catch (err) { if (!(err && err.code === "bad_action")) throw err; }
+    S.ref = { ...S.ref, types: [...(S.ref.types || []), name] };
+  }
+  return name;
 }
 function renderOverview() {
   const P = S.projects;
@@ -1187,6 +1209,7 @@ function openUpdate(id) {
   $("uDueNote").textContent = "จำนวนวันที่เหลือจะแสดงบนการ์ดและในหน้าโครงการรวม";
   fillSelect($("uOwner"), staffList(), "— เลือก —"); $("uOwner").value = p.owner || "";
   $("uBudget").value = p.budget ? baht(p.budget) : ""; $("uAwarded").value = p.awarded ? baht(p.awarded) : "";
+  fillTypeSelect($("uType"), $("uTypeNew"), p.type || "");
   fillSelect($("uMethod"), methodList(p.method), "— ยังไม่ระบุ —"); $("uMethod").value = p.method || ""; $("uFund").value = p.fund || "";
   $("uErr").textContent = "";
   openDrawer("upd"); $("uStatus").focus();
@@ -1200,8 +1223,11 @@ $("upd").addEventListener("submit", async e => {
     updatedAt: Date.now(), updatedBy: S.me || "" };
   if (Number.isNaN(data.budget) || Number.isNaN(data.awarded)) { $("uErr").textContent = "วงเงินต้องเป็นตัวเลข เช่น 1,250,000"; return; }
   if (!data.status) { $("uErr").textContent = "กรุณากรอกสถานะล่าสุด"; return; }
+  if ($("uType").value === NEW_TYPE && !$("uTypeNew").value.trim()) { $("uErr").textContent = "กรุณาพิมพ์ชื่อประเภทงานใหม่"; return; }
   $("uSave").disabled = true; $("uErr").textContent = "";
   try {
+    const type = await pickType($("uType"), $("uTypeNew"));
+    if (type) data.type = type;
     await S.db.doc("projects/" + p.id).update(data);
     try { await S.db.collection(`projects/${p.id}/log`).add({ stage: data.stage, status: data.status, owner: data.owner, staff: S.staff || p.owner, at: data.updatedAt, by: S.me || "" }); } catch {}
     closeDrawers(); toast("บันทึกสถานะแล้ว");
@@ -1211,7 +1237,7 @@ $("upd").addEventListener("submit", async e => {
 
 $("addTopBtn").onclick = () => $("addBtn").onclick();
 $("addBtn").onclick = () => {
-  fillSelect($("aType"), typeList(), "— เลือกประเภท —"); fillSelect($("aOwner"), staffList(), "— เลือก —");
+  fillTypeSelect($("aType"), $("aTypeNew"), ""); fillSelect($("aOwner"), staffList(), "— เลือก —");
   $("aOwner").value = S.staff || ""; $("aName").value = ""; $("aStatus").value = ""; $("aStage-plan").checked = true; $("aErr").textContent = "";
   dpSet("aDue", ""); $("aDueField").hidden = false;
   $("aBudget").value = ""; $("aAwarded").value = ""; fillSelect($("aMethod"), methodList(), "— ยังไม่ระบุ —"); $("aFund").value = "";
@@ -1221,14 +1247,16 @@ $("add").addEventListener("submit", async e => {
   e.preventDefault(); if (!S.db) return;
   const title = $("aName").value.trim().replace(/\s+/g, " ");
   if (!title) { $("aErr").textContent = "กรุณากรอกชื่อโครงการ"; return; }
-  if (!$("aType").value || !$("aOwner").value) { $("aErr").textContent = "กรุณาเลือกประเภทและผู้รับผิดชอบ"; return; }
+  if (!$("aType").value || !$("aOwner").value) { $("aErr").textContent = "กรุณาเลือกประเภทงานและผู้รับผิดชอบ"; return; }
+  if ($("aType").value === NEW_TYPE && !$("aTypeNew").value.trim()) { $("aErr").textContent = "กรุณาพิมพ์ชื่อประเภทงานใหม่"; return; }
   if (Number.isNaN(parseBaht($("aBudget").value)) || Number.isNaN(parseBaht($("aAwarded").value))) { $("aErr").textContent = "วงเงินต้องเป็นตัวเลข เช่น 1,250,000"; return; }
   const now = Date.now();
-  const data = { title, type: $("aType").value, owner: $("aOwner").value, status: $("aStatus").value.trim(),
+  const data = { title, type: "", owner: $("aOwner").value, status: $("aStatus").value.trim(),
     stage: (document.querySelector('input[name="aStage"]:checked') || {}).value || "plan", due: $("aDue").value || "", budget: parseBaht($("aBudget").value), awarded: parseBaht($("aAwarded").value), method: $("aMethod").value || "", fund: $("aFund").value || "",
     order: Math.max(0, ...S.projects.map(p => p.order || 0)) + 1, createdAt: now, updatedAt: now, updatedBy: S.me || "", source: "app" };
   $("aSave").disabled = true;
   try {
+    data.type = await pickType($("aType"), $("aTypeNew"));
     const ref = await S.db.collection("projects").add(data);
     try { await S.db.collection(`projects/${ref.id}/log`).add({ stage: data.stage, status: data.status || "เพิ่มโครงการใหม่", owner: data.owner, staff: S.staff || data.owner, at: now, by: S.me || "" }); } catch {}
     closeDrawers(); toast("เพิ่มโครงการแล้ว");
