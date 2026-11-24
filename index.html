@@ -919,6 +919,9 @@ function staffList() {
 function typeList() {
   const set = new Set(S.ref.types || []); S.projects.forEach(p => p.type && set.add(p.type)); return [...set];
 }
+/* Finished work (stage แล้วเสร็จ or 100% เบิกจ่ายเงินแล้ว) always sorts below open work */
+const isFinished = p => p.stage === "done" || p.progress === "paid";
+const doneLast = (a, b) => (isFinished(a) ? 1 : 0) - (isFinished(b) ? 1 : 0);
 const sorted = arr => arr.slice().sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9) || (a.createdAt || 0) - (b.createdAt || 0));
 
 // ---------- theme ----------
@@ -966,10 +969,10 @@ function filtered() {
     (!S.stage || (S.stage === "due" ? isDueAlert(p) : S.stage === "paid" ? isPaid(p) : S.stage === "none" ? !SI.hasOwnProperty(p.stage) : p.stage === S.stage)) &&
     (!S.type || p.type === S.type) && (!S.owner || p.owner === S.owner) && (!S.method || (S.method === "-" ? !p.method : p.method === S.method)) && (!S.fund || (S.fund === "-" ? !p.fund : p.fund === S.fund)) &&
     (!q || (p.title + " " + p.status).toLowerCase().includes(q)))
-    .sort((a, b) => S.sort === "budget" ? ((Number(b.budget) || -1) - (Number(a.budget) || -1))
+    .sort((a, b) => doneLast(a, b) || (S.sort === "budget" ? ((Number(b.budget) || -1) - (Number(a.budget) || -1))
       : S.sort === "due" ? ((a.due && a.stage !== "done" ? daysLeft(a) : 1e9) - (b.due && b.stage !== "done" ? daysLeft(b) : 1e9))
       : S.sort === "order" ? 0
-      : ((b.updatedAt || 0) - (a.updatedAt || 0)));  // default: most recently updated first
+      : ((b.updatedAt || 0) - (a.updatedAt || 0))));  // default: most recently updated first
 }
 function fillSelect(sel, items, allLabel, counts) {
   const v = sel.value; sel.replaceChildren(new Option(allLabel, ""));
@@ -1166,7 +1169,7 @@ function renderStaff() {
   $("staffTitle").textContent = `โครงการของ ${S.staff} (${mine.length})`;
   if (!mine.length) { cards.innerHTML = `<div class="empty">ยังไม่มีโครงการที่ ${esc(S.staff)} รับผิดชอบ กด “เพิ่มโครงการใหม่” เพื่อเริ่ม</div>`; return; }
   const grid = document.createElement("div"); grid.className = "cards";
-  mine.sort((a, b) => ((a.due && a.stage !== "done" ? daysLeft(a) : 1e9) - (b.due && b.stage !== "done" ? daysLeft(b) : 1e9)) || ((a.order ?? 1e9) - (b.order ?? 1e9)));
+  mine.sort((a, b) => doneLast(a, b) || ((a.due && a.stage !== "done" ? daysLeft(a) : 1e9) - (b.due && b.stage !== "done" ? daysLeft(b) : 1e9)) || ((a.order ?? 1e9) - (b.order ?? 1e9)));
   for (const p of mine) {
     const si = SI[p.stage] ?? -1, s = stageOf(p);
     const c = document.createElement("article"); c.className = "card"; c.style.cssText = stageVars(s.key);
