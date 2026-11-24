@@ -403,6 +403,10 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 .pm { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: .8rem; color: var(--muted); min-width: 0; }
 .pm .pill { font-size: .78rem; }
 .pm .own b { color: var(--fg); font-weight: 500; }
+.pg { display: inline-flex; align-items: center; gap: 6px; }
+.pg b { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+.pgbar { width: 56px; height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; flex: none; }
+.pgbar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
 .pf { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
 .pf > span { display: grid; align-content: start; gap: 1px; min-width: 0; font-size: .8rem; background: var(--accent-soft); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; }
 .pf i { font-style: normal; font-size: .72rem; color: var(--muted); }
@@ -575,6 +579,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 <form class="drawer" id="upd" hidden aria-labelledby="uTitle">
   <h2 id="uTitle">อัปเดตสถานะ</h2>
   <label class="field"><span>ชื่อโครงการ</span><textarea id="uName" maxlength="300" rows="2" style="min-height:0"></textarea></label>
+  <label class="field"><span>ความก้าวหน้า</span><select id="uProg"></select><small>เลือกแล้วขั้นตอนด้านล่างจะเปลี่ยนตามให้</small></label>
   <div class="field"><span>ขั้นตอน</span><div class="opts" id="uStages"></div></div>
   <label class="field"><span>สถานะล่าสุด</span>
     <textarea id="uStatus" maxlength="600" placeholder="เช่น ตรวจรับงานงวด 2 เมื่อ 29 ตุลาคม 2569"></textarea>
@@ -601,6 +606,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
   <div class="field"><span>ประเภทงาน</span><select id="aType" aria-label="ประเภทงาน"></select>
     <input type="text" id="aTypeNew" maxlength="60" placeholder="พิมพ์ชื่อประเภทงานใหม่ เช่น งานซ่อมบำรุง" hidden></div>
   <label class="field"><span>ผู้รับผิดชอบ</span><select id="aOwner"></select></label>
+  <label class="field"><span>ความก้าวหน้า</span><select id="aProg"></select><small>เลือกแล้วขั้นตอนด้านล่างจะเปลี่ยนตามให้</small></label>
   <div class="field"><span>ขั้นตอน</span><div class="opts" id="aStages"></div></div>
   <div class="pair2">
     <label class="field"><span>วงเงินงบประมาณ (บาท)</span><input type="text" id="aBudget" inputmode="decimal" placeholder="เช่น 1,250,000"></label>
@@ -820,6 +826,26 @@ const STAGES = [
   { key: "done", label: "แล้วเสร็จ / ปิดโครงการ" },
 ];
 const SI = Object.fromEntries(STAGES.map((s, i) => [s.key, i]));
+/* ความก้าวหน้า: fine-grained steps with the percent used on screen and in the Word/PDF reports; each belongs to one stage */
+const STEPS = [
+  { key: "tor", label: "จัดทำ TOR / ราคากลาง", pct: 10, stage: "tor" },
+  { key: "procure", label: "จัดซื้อจัดจ้าง", pct: 20, stage: "procure" },
+  { key: "invite", label: "ประกาศเชิญชวน", pct: 30, stage: "procure" },
+  { key: "evaluate", label: "พิจารณาผล", pct: 40, stage: "procure" },
+  { key: "award", label: "ประกาศผู้ชนะ", pct: 50, stage: "procure" },
+  { key: "sign", label: "ลงนามในสัญญา", pct: 55, stage: "contract" },
+  { key: "manage", label: "บริหารสัญญา", pct: 70, stage: "contract" },
+  { key: "inspect", label: "ตรวจรับพัสดุ", pct: 90, stage: "contract" },
+  { key: "paid", label: "เบิกจ่ายเงินแล้ว", pct: 100, stage: "done" },
+];
+const STEP = Object.fromEntries(STEPS.map(s => [s.key, s]));
+/* Projects without a chosen step get the first step of their stage (วางแผน = 0%) */
+const STAGE_STEP = { tor: "tor", procure: "procure", contract: "sign", done: "paid" };
+function progressOf(p) {
+  const s = STEP[p.progress] || STEP[STAGE_STEP[p.stage]];
+  if (s) return { pct: s.pct, label: s.label };
+  return p.stage === "plan" ? { pct: 0, label: "วางแผน" } : null;
+}
 const stageVars = k => `--c: var(--${k}); --cb: var(--${k}-bg)`;
 const $ = id => document.getElementById(id);
 const S = { projects: [], ref: { types: [], staff: [] }, loaded: false, db: null, user: null, me: null,
@@ -944,6 +970,10 @@ async function pickType(sel, input) {
   }
   return name;
 }
+function progBadge(p) {
+  const g = progressOf(p); if (!g) return "";
+  return `<span class="pg" title="ความก้าวหน้า"><span class="pgbar"><i style="width:${g.pct}%"></i></span><b>${g.pct}%</b> ${esc(g.label)}</span>`;
+}
 function renderOverview() {
   const P = S.projects;
   const pipe = $("pipe"); pipe.replaceChildren();
@@ -982,7 +1012,7 @@ function renderOverview() {
     const r = document.createElement("div"); r.className = "prow" + (p.id === S.sel ? " sel" : ""); r.tabIndex = 0; r.setAttribute("role", "listitem");
     r.innerHTML = `<div class="pt">${esc(p.title)}</div>
       <div class="pr"><span>${when(p.updatedAt)}</span>${p.updatedByName ? `<span>โดย ${esc(p.updatedByName)}</span>` : ""}</div>
-      <div class="pm">${stagePill(p)}<span class="own">ผู้รับผิดชอบ <b>${esc(p.owner || "—")}</b></span></div>
+      <div class="pm">${stagePill(p)}${progBadge(p)}<span class="own">ผู้รับผิดชอบ <b>${esc(p.owner || "—")}</b></span></div>
       <div class="pf">
         <span><i>วงเงินงบประมาณ</i><b>${Number(p.budget) > 0 ? baht(p.budget) + " บาท" : "—"}</b></span>
         <span><i>วงเงินซื้อ/จ้าง</i><b>${Number(p.awarded) > 0 ? baht(p.awarded) + " บาท" : "—"}</b></span>
@@ -1026,7 +1056,7 @@ function savedNote(p) {
 async function renderPane(p) {
   const pane = $("pane");
   if (!p) { paneKey = ""; pane.innerHTML = `<div class="pane-empty">เลือกโครงการจากรายการเพื่อดูรายละเอียด</div>`; return; }
-  const key = p.id + "|" + (p.updatedAt || 0) + "|" + (p.awarded || 0) + "|" + (p.budget || 0) + "|" + (p.owner || "") + "|" + (p.due || "");
+  const key = p.id + "|" + (p.progress || "") + "|" + (p.updatedAt || 0) + "|" + (p.awarded || 0) + "|" + (p.budget || 0) + "|" + (p.owner || "") + "|" + (p.due || "");
   if (key === paneKey) return;
   paneKey = key;
   const si = SI[p.stage] ?? -1;
@@ -1036,6 +1066,7 @@ async function renderPane(p) {
     <div class="kvg">
       <div><span>วงเงินงบประมาณ${p.fund ? " (" + esc(p.fund) + ")" : ""}</span><b>${p.budget ? baht(p.budget) + " บาท" : "—"}</b></div>
       <div><span>วงเงินที่จัดซื้อ/จ้าง</span><b>${p.awarded ? baht(p.awarded) + " บาท" : "—"}</b>${savedNote(p)}</div>
+      <div><span>ความก้าวหน้า</span>${progressOf(p) ? `<b>${progressOf(p).pct}%</b> <small>${esc(progressOf(p).label)}</small>` : "<b>—</b>"}</div>
       <div><span>วันส่งมอบ</span><b>${p.due ? thDate(p.due) : "ยังไม่กำหนด"}</b> ${p.due ? dueBadge(p) : ""}</div>
       <div><span>ผู้รับผิดชอบ</span><b>${esc(p.owner || "—")}</b></div>
       <div><span>อัปเดตล่าสุด</span><b>${when(p.updatedAt)}</b>${p.updatedByName ? `<small> โดย ${esc(p.updatedByName)}</small>` : ""}</div>
@@ -1115,7 +1146,7 @@ function renderStaff() {
     c.innerHTML = `<div class="type">${esc(p.type)}</div><h3>${esc(p.title)}</h3>
       <div class="money-row"><span>งบประมาณ <b>${p.budget ? baht(p.budget) + " บาท" : "—"}</b></span><span>จัดซื้อ/จ้าง <b>${p.awarded ? baht(p.awarded) + " บาท" : "—"}</b></span><span>วิธีการ <b>${esc(p.method) || "—"}</b></span></div>
       <div><div class="steps" aria-label="ขั้นตอนที่ ${si + 1} จาก 5">${STAGES.map((_, i) => `<i class="${i <= si ? "on" : ""}"></i>`).join("")}</div>
-      <div class="steps-l"><span>${esc(s.label)}</span></div></div>
+      <div class="steps-l"><span>${esc(s.label)}</span>${progressOf(p) ? `<span>ความก้าวหน้า ${progressOf(p).pct}%</span>` : ""}</div></div>
       <div class="st">${esc(p.status) || '<span class="muted">ยังไม่มีสถานะ</span>'}</div>
       ${p.due ? `<div>${dueBadge(p)} <span class="muted" style="font-size:0.8rem">ส่งมอบ ${thDate(p.due)}</span></div>` : ""}
       <div class="foot"><span>อัปเดต ${when(p.updatedAt)}</span></div>`;
@@ -1172,6 +1203,15 @@ function buildStageOpts(box, name) {
   box.innerHTML = STAGES.map(s => `<label style="${stageVars(s.key)}"><input type="radio" name="${name}" id="${name}-${s.key}" value="${s.key}"><span>${esc(s.label)}</span></label>`).join("");
 }
 buildStageOpts($("uStages"), "uStage"); buildStageOpts($("aStages"), "aStage");
+function buildProg(sel, radios) {
+  sel.replaceChildren(new Option("— ตามขั้นตอน —", ""));
+  STEPS.forEach(s => sel.append(new Option(`${s.pct}% ${s.label}`, s.key)));
+  sel.onchange = () => { const s = STEP[sel.value]; if (s) { const r = document.getElementById(radios + "-" + s.stage); if (r) r.checked = true; } };
+  document.querySelectorAll(`input[name="${radios}"]`).forEach(r => r.addEventListener("change", () => {
+    const s = STEP[sel.value]; if (s && s.stage !== r.value) sel.value = "";
+  }));
+}
+buildProg($("uProg"), "uStage"); buildProg($("aProg"), "aStage");
 
 async function openDetail(id) {
   const p = S.projects.find(x => x.id === id); if (!p) return;
@@ -1180,6 +1220,7 @@ async function openDetail(id) {
   $("dStage").style.cssText = stageVars(s.key); $("dStage").textContent = s.label;
   $("dTitle").textContent = p.title;
   $("dKv").innerHTML = `<dt>ประเภท</dt><dd>${esc(p.type)}</dd><dt>วงเงินงบประมาณ</dt><dd>${p.budget ? baht(p.budget) + " บาท" : "—"}</dd><dt>วงเงินที่จัดซื้อ/จ้าง</dt><dd>${p.awarded ? baht(p.awarded) + " บาท" : "—"}${savedNote(p)}</dd><dt>วิธีการ</dt><dd>${esc(p.method) || "—"}</dd><dt>แหล่งเงิน</dt><dd>${esc(p.fund) || "—"}</dd><dt>ผู้รับผิดชอบ</dt><dd>${esc(p.owner)}</dd>
+    <dt>ความก้าวหน้า</dt><dd>${progressOf(p) ? `${progressOf(p).pct}% ${esc(progressOf(p).label)}` : "—"}</dd>
     <dt>สถานะล่าสุด</dt><dd>${esc(p.status) || "—"}</dd>
     <dt>วันส่งมอบ</dt><dd>${p.due ? `${thDate(p.due)} ${dueBadge(p)}` : '<span class="muted">ยังไม่กำหนด</span>'}</dd><dt>อัปเดต</dt><dd>${when(p.updatedAt)}${p.updatedByName ? ` โดย ${esc(p.updatedByName)}` : ""}</dd>`;
   $("dUpdate").disabled = !S.db;
@@ -1204,6 +1245,7 @@ function openUpdate(id) {
   S.editing = id;
   $("uName").value = p.title || "";
   document.querySelectorAll('input[name="uStage"]').forEach(r => r.checked = r.value === p.stage);
+  $("uProg").value = STEP[p.progress] ? p.progress : "";
   $("uStatus").value = p.status || ""; dpSet("uDue", p.due || "");
   dpDisable("uDue", false);
   $("uDueNote").textContent = "จำนวนวันที่เหลือจะแสดงบนการ์ดและในหน้าโครงการรวม";
@@ -1217,7 +1259,7 @@ function openUpdate(id) {
 $("upd").addEventListener("submit", async e => {
   e.preventDefault();
   const p = S.projects.find(x => x.id === S.editing); if (!p || !S.db) return;
-  const data = { stage: (document.querySelector('input[name="uStage"]:checked') || {}).value || "",
+  const data = { stage: (document.querySelector('input[name="uStage"]:checked') || {}).value || "", progress: $("uProg").value || "",
     status: $("uStatus").value.trim(), due: $("uDue").value || "",
     owner: $("uOwner").value || p.owner, budget: parseBaht($("uBudget").value), awarded: parseBaht($("uAwarded").value), method: $("uMethod").value || "", fund: $("uFund").value || "",
     updatedAt: Date.now(), updatedBy: S.me || "" };
@@ -1241,7 +1283,7 @@ $("upd").addEventListener("submit", async e => {
 $("addTopBtn").onclick = () => $("addBtn").onclick();
 $("addBtn").onclick = () => {
   fillTypeSelect($("aType"), $("aTypeNew"), ""); fillSelect($("aOwner"), staffList(), "— เลือก —");
-  $("aOwner").value = S.staff || ""; $("aName").value = ""; $("aStatus").value = ""; $("aStage-plan").checked = true; $("aErr").textContent = "";
+  $("aOwner").value = S.staff || ""; $("aName").value = ""; $("aStatus").value = ""; $("aStage-plan").checked = true; $("aProg").value = ""; $("aErr").textContent = "";
   dpSet("aDue", ""); $("aDueField").hidden = false;
   $("aBudget").value = ""; $("aAwarded").value = ""; fillSelect($("aMethod"), methodList(), "— ยังไม่ระบุ —"); $("aFund").value = "";
   openDrawer("add"); $("aName").focus();
@@ -1255,7 +1297,7 @@ $("add").addEventListener("submit", async e => {
   if (Number.isNaN(parseBaht($("aBudget").value)) || Number.isNaN(parseBaht($("aAwarded").value))) { $("aErr").textContent = "วงเงินต้องเป็นตัวเลข เช่น 1,250,000"; return; }
   const now = Date.now();
   const data = { title, type: "", owner: $("aOwner").value, status: $("aStatus").value.trim(),
-    stage: (document.querySelector('input[name="aStage"]:checked') || {}).value || "plan", due: $("aDue").value || "", budget: parseBaht($("aBudget").value), awarded: parseBaht($("aAwarded").value), method: $("aMethod").value || "", fund: $("aFund").value || "",
+    stage: (document.querySelector('input[name="aStage"]:checked') || {}).value || "plan", progress: $("aProg").value || "", due: $("aDue").value || "", budget: parseBaht($("aBudget").value), awarded: parseBaht($("aAwarded").value), method: $("aMethod").value || "", fund: $("aFund").value || "",
     order: Math.max(0, ...S.projects.map(p => p.order || 0)) + 1, createdAt: now, updatedAt: now, updatedBy: S.me || "", source: "app" };
   $("aSave").disabled = true;
   try {
@@ -1393,8 +1435,7 @@ function loadJSZip() {
   return new Promise((res, rej) => { const sc = document.createElement("script");
     sc.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"; sc.onload = res; sc.onerror = () => rej(new Error("jszip")); document.head.append(sc); });
 }
-function progressPct(p) { const i = SI[p.stage]; return i == null ? null : (i + 1) * 20; }
-function progressLines(p) { const v = progressPct(p); return v == null ? ["-"] : [v + "%", STAGES[SI[p.stage]].label.split(" / ")[0]]; }
+function progressLines(p) { const g = progressOf(p); return g ? [g.pct + "%", g.label] : ["-"]; }
 const fmtMoney = v => Number(v) > 0 ? baht(v) : "-";
 function fillWordForm(doc, projects) {
   const t0 = doc.search(/<w:tbl[ >]/), t1 = doc.indexOf("</w:tbl>");
