@@ -326,7 +326,7 @@ th { border-bottom-color: var(--accent); }
     <div style="display:grid;gap:14px">
       <div class="bar">
         <h2>ภาพรวมโครงการตามขั้นตอน</h2>
-        <button class="btn ghost sm" id="exportBtn" type="button" hidden>Export CSV</button>
+        <div class="bar-actions"><button class="btn ghost sm" id="exportWordBtn" type="button" hidden>Export Word</button><button class="btn ghost sm" id="exportBtn" type="button" hidden>Export CSV</button></div>
       </div>
       <div class="pipe" id="pipe" role="group" aria-label="กรองตามขั้นตอน"></div>
       <div class="filters">
@@ -1003,6 +1003,68 @@ $("pins").addEventListener("submit", async e => {
 
 // ---------- export ----------
 const csvCell = v => { v = v == null ? "" : String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+// ---------- export: Word form (fills the department's own template, form-template.docx) ----------
+function loadJSZip() {
+  if (window.JSZip) return Promise.resolve();
+  return new Promise((res, rej) => { const sc = document.createElement("script");
+    sc.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"; sc.onload = res; sc.onerror = () => rej(new Error("jszip")); document.head.append(sc); });
+}
+function fillWordForm(doc, projects) {
+  const t0 = doc.search(/<w:tbl[ >]/), t1 = doc.indexOf("</w:tbl>");
+  const tbl = doc.slice(t0, t1);
+  const trs = tbl.match(/<w:tr[ >][\s\S]*?<\/w:tr>/g);
+  const [headRow, groupTpl, dataTplRaw] = trs;
+  const dataTpl = dataTplRaw.replace("<w:trPr>", "<w:trPr><w:cantSplit/>");
+  const before = tbl.slice(0, tbl.indexOf(headRow));
+  const x = v => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const fillCell = (tc, lines, plain) => {
+    const pm = tc.match(/<w:p[ >][\s\S]*?<\/w:p>/)[0];
+    let p = pm.replace('<w:ind w:left="360"/>', "");
+    if (plain) p = p.replace(/<w:b\/>|<w:bCs\/>/g, "");
+    const rm = p.match(/<w:pPr>[\s\S]*?(<w:rPr>[\s\S]*?<\/w:rPr>)[\s\S]*?<\/w:pPr>/);
+    const rpr = rm ? rm[1].replace("</w:rPr>", "<w:cs/></w:rPr>") : "";
+    const out = (lines.length ? lines : [""]).map(l => p.replace("</w:p>", () => `<w:r>${rpr}<w:t xml:space="preserve">${x(l)}</w:t></w:r></w:p>`)).join("");
+    return tc.replace(pm, () => out);
+  };
+  const tcs = dataTpl.match(/<w:tc>[\s\S]*?<\/w:tc>/g);
+  const order = [...(S.ref.types || [])];
+  projects.forEach(p => { if (p.type && !order.includes(p.type)) order.push(p.type); });
+  const rows = [headRow];
+  for (const type of order) {
+    const items = projects.filter(p => p.type === type).sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9));
+    if (!items.length) continue;
+    rows.push(groupTpl.replace(/(<w:t>)[^<]*(<\/w:t>)/, (m, a, b) => a + x(type) + b));
+    items.forEach((p, i) => {
+      const status = String(p.status || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const vals = [[String(i + 1), false], [[p.title], true], [status.length ? status : ["-"], false], [[p.owner || "-"], false]];
+      let row = dataTpl;
+      tcs.forEach((tc, k) => { const [v, plain] = vals[k]; row = row.replace(tc, () => fillCell(tc, Array.isArray(v) ? v : [v], plain)); });
+      rows.push(row);
+    });
+  }
+  return doc.slice(0, t0) + before + rows.join("") + doc.slice(t1);
+}
+$("exportWordBtn").onclick = async () => {
+  const btn = $("exportWordBtn"), label = btn.textContent;
+  btn.disabled = true; btn.textContent = "กำลังสร้างไฟล์…";
+  try {
+    const dl = await claude.use("downloads");
+    if (!dl) throw new Error("no-downloads");
+    await loadJSZip();
+    const res = await fetch("form-template.docx");
+    if (!res.ok) throw new Error("no-template");
+    const zip = await JSZip.loadAsync(await res.arrayBuffer());
+    const doc = await zip.file("word/document.xml").async("string");
+    zip.file("word/document.xml", fillWordForm(doc, filtered()));
+    const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    const d = new Date().toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+    await dl.save({ filename: `สถานะงาน บสก. ${d}.docx`, data: blob });
+    toast("ส่งไฟล์ Word ให้ดาวน์โหลดแล้ว");
+  } catch (err) {
+    if (!err || err.code !== "declined") toast(err && err.message === "no-template" ? "ไม่พบไฟล์ฟอร์มต้นแบบ (form-template.docx)" : "สร้างไฟล์ Word ไม่สำเร็จ ลองอีกครั้ง");
+  } finally { btn.disabled = false; btn.textContent = label; }
+};
+
 $("exportBtn").onclick = async () => {
   const dl = await claude.use("downloads");
   if (!dl) { toast("ดาวน์โหลดไฟล์ไม่ได้ในมุมมองนี้"); return; }
@@ -1032,7 +1094,7 @@ async function start() {
     const mine = user && user.staffName ? await user.staffName() : "";
     if (mine && mine !== "ผู้ดูแลระบบ" && mine !== "รหัสส่วนกลาง") { S.staff = mine; try { localStorage.setItem("bsk-staff", mine); } catch {} }
   } catch {}
-  try { if (user && ((await user.isOwner()) || (await user.canEdit()))) { S.canEdit = true; $("exportBtn").hidden = false; } } catch {}
+  try { if (user && ((await user.isOwner()) || (await user.canEdit()))) { S.canEdit = true; $("exportBtn").hidden = false; $("exportWordBtn").hidden = false; } } catch {}
   try { if (user && (await user.can("data.write")) === false) note("คุณดูได้อย่างเดียว ถ้าต้องการอัปเดตงาน ขอสิทธิ์ Contributor จากเจ้าของระบบ"); } catch {}
   const timer = setTimeout(() => { if (!S.loaded) { S.loaded = true; note("โหลดข้อมูลช้ากว่าปกติ ข้อมูลจะขึ้นเองเมื่อเชื่อมต่อได้"); render(); } }, 10000);
   db.doc("meta/ref").onSnapshot(d => { if (d.exists) { S.ref = d.data(); render(); } }, () => {});
