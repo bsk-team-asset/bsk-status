@@ -947,7 +947,7 @@ function renderOverview() {
     const r = document.createElement("div"); r.className = "prow" + (p.id === S.sel ? " sel" : ""); r.tabIndex = 0; r.setAttribute("role", "listitem");
     r.innerHTML = `<div class="pt">${esc(p.title)}</div>
       <div class="pr"><span>${when(p.updatedAt)}</span>${p.updatedByName ? `<span>โดย ${esc(p.updatedByName)}</span>` : ""}</div>
-      <div class="pm">${stagePill(p)}<span>${esc(p.owner || "-")}</span>${Number(p.awarded) > 0 ? `<span class="amt">จัดซื้อ/จ้าง <b>${baht(p.awarded)}</b> บาท</span>` : ""}${p.due ? dueBadge(p) : ""}</div>`;
+      <div class="pm">${stagePill(p)}<span>${esc(p.owner || "-")}</span><span class="amt">จัดซื้อ/จ้าง ${Number(p.awarded) > 0 ? `<b>${baht(p.awarded)}</b> บาท` : "<b>—</b>"}</span>${p.due ? dueBadge(p) : ""}</div>`;
     const pick = () => { if (narrow()) { openDetail(p.id); return; } S.sel = p.id; tb.querySelectorAll(".prow").forEach(x => x.classList.toggle("sel", x === r)); renderPane(p); };
     r.onclick = pick; r.onkeydown = e => { if (e.key === "Enter") pick(); };
     tb.append(r);
