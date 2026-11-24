@@ -21,32 +21,43 @@
 <style>
 /* Layout: sticky header with two tabs (overview / staff). Overview = stage pipeline strip, filters, project table (cards on phone). Staff = name picker, project cards, side drawer forms. */
 :root {
-  /* palette: #F72585 #B5179E #7209B7 #560BAD #480CA8 #3A0CA3 #3F37C9 #4361EE #4895EF #4CC9F0 */
-  --bg: #ffffff; --surface: #ffffff; --fg: #1b1340; --muted: #7d7896; --line: #ece9f5;
-  --accent: #3a0ca3; --accent-fg: #ffffff; --accent-soft: #f2effc;
-  --grad: linear-gradient(90deg, #f72585, #b5179e, #7209b7, #3a0ca3, #4361ee, #4cc9f0);
-  --plan: #f72585; --plan-bg: #fde6f1;
-  --tor: #b5179e; --tor-bg: #f8e4f4;
-  --procure: #7209b7; --procure-bg: #f0e3fa;
-  --contract: #4361ee; --contract-bg: #e5eafd;
-  --done: #1597c4; --done-bg: #e2f6fd;
-  --issue: #e0136f; --issue-bg: #fde6f1;
-  --warn: #9c128a; --warn-bg: #f8e4f4;
+  /* sweet glass: lavender / sky / mint, ink text */
+  --bg: #f4f0ff; --surface: #ffffff; --fg: #2f2a52; --muted: #807ba3; --line: rgba(120,105,190,.16);
+  --accent: #7b5cf0; --accent-2: #a98bff; --accent-fg: #ffffff; --accent-soft: #efeafe;
+  --plan: #ec6fa6; --plan-bg: #fde6f1;
+  --tor: #a77cf2; --tor-bg: #f0e8fe;
+  --procure: #5f93ee; --procure-bg: #e5eefd;
+  --contract: #2fae92; --contract-bg: #dcf5ee;
+  --done: #8d95b0; --done-bg: #eceef5;
+  --issue: #e0477f; --issue-bg: #fde6ee;
+  --warn: #b65ad0; --warn-bg: #f6e6fb;
+  --page: linear-gradient(150deg, #f6efff 0%, #eef3ff 48%, #eefbf6 100%);
+  --blob1: rgba(214,190,255,.62); --blob2: rgba(172,212,255,.58); --blob3: rgba(175,240,220,.5);
+  --glass: rgba(255,255,255,.58); --glass-strong: rgba(255,255,255,.8); --glass-line: rgba(255,255,255,.85);
+  --shadow: 0 10px 32px rgba(110,90,190,.12);
   --font-display: "Supermarket", system-ui, sans-serif;
   --font-body: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0e0b22; --surface: #0e0b22; --fg: #eeeaff; --muted: #9b95bd; --line: #2a2452;
-  --accent: #4cc9f0; --accent-fg: #0e0b22; --accent-soft: #1c1840;
-  --plan: #ff4d9d; --plan-bg: #3a1030; --tor: #df4fc9; --tor-bg: #351036;
-  --procure: #a35cf0; --procure-bg: #2a1450; --contract: #6f8cff; --contract-bg: #1a2158;
-  --done: #4cc9f0; --done-bg: #10304a; --issue: #ff4d9d; --issue-bg: #3a1030; --warn: #df4fc9; --warn-bg: #351036; color-scheme: dark; } }
+  --bg: #141129; --surface: #1c1838; --fg: #ece9ff; --muted: #a29dc6; --line: rgba(190,180,255,.13);
+  --accent: #a98bff; --accent-2: #c4b0ff; --accent-fg: #17132e; --accent-soft: rgba(169,139,255,.16);
+  --plan: #ff8fbf; --plan-bg: rgba(255,143,191,.16); --tor: #c4a1ff; --tor-bg: rgba(196,161,255,.16);
+  --procure: #8ab4ff; --procure-bg: rgba(138,180,255,.16); --contract: #5fd8b8; --contract-bg: rgba(95,216,184,.15);
+  --done: #a9b0c8; --done-bg: rgba(169,176,200,.14); --issue: #ff7ba8; --issue-bg: rgba(255,123,168,.16); --warn: #d796f0; --warn-bg: rgba(215,150,240,.15);
+  --page: linear-gradient(150deg, #17132e 0%, #121a30 55%, #0f1f24 100%);
+  --blob1: rgba(123,92,240,.28); --blob2: rgba(70,120,220,.22); --blob3: rgba(47,174,146,.16);
+  --glass: rgba(34,30,66,.55); --glass-strong: rgba(52,46,94,.7); --glass-line: rgba(255,255,255,.08);
+  --shadow: 0 12px 34px rgba(0,0,0,.35); color-scheme: dark; } }
 :root[data-theme="dark"] {
-  --bg: #0e0b22; --surface: #0e0b22; --fg: #eeeaff; --muted: #9b95bd; --line: #2a2452;
-  --accent: #4cc9f0; --accent-fg: #0e0b22; --accent-soft: #1c1840;
-  --plan: #ff4d9d; --plan-bg: #3a1030; --tor: #df4fc9; --tor-bg: #351036;
-  --procure: #a35cf0; --procure-bg: #2a1450; --contract: #6f8cff; --contract-bg: #1a2158;
-  --done: #4cc9f0; --done-bg: #10304a; --issue: #ff4d9d; --issue-bg: #3a1030; --warn: #df4fc9; --warn-bg: #351036; color-scheme: dark; }
+  --bg: #141129; --surface: #1c1838; --fg: #ece9ff; --muted: #a29dc6; --line: rgba(190,180,255,.13);
+  --accent: #a98bff; --accent-2: #c4b0ff; --accent-fg: #17132e; --accent-soft: rgba(169,139,255,.16);
+  --plan: #ff8fbf; --plan-bg: rgba(255,143,191,.16); --tor: #c4a1ff; --tor-bg: rgba(196,161,255,.16);
+  --procure: #8ab4ff; --procure-bg: rgba(138,180,255,.16); --contract: #5fd8b8; --contract-bg: rgba(95,216,184,.15);
+  --done: #a9b0c8; --done-bg: rgba(169,176,200,.14); --issue: #ff7ba8; --issue-bg: rgba(255,123,168,.16); --warn: #d796f0; --warn-bg: rgba(215,150,240,.15);
+  --page: linear-gradient(150deg, #17132e 0%, #121a30 55%, #0f1f24 100%);
+  --blob1: rgba(123,92,240,.28); --blob2: rgba(70,120,220,.22); --blob3: rgba(47,174,146,.16);
+  --glass: rgba(34,30,66,.55); --glass-strong: rgba(52,46,94,.7); --glass-line: rgba(255,255,255,.08);
+  --shadow: 0 12px 34px rgba(0,0,0,.35); color-scheme: dark; }
 
 * { box-sizing: border-box; }
 /* Body text in IBM Plex Sans Thai; headings, tabs and big numbers in Supermarket (one weight, so no faux bold) */
@@ -303,45 +314,185 @@ nav a[aria-current="page"] { color: var(--accent); border-bottom-color: var(--ac
 .slist button[aria-current="true"] { color: var(--accent); }
 th { border-bottom-color: var(--accent); }
 .opts input:checked + span { background: var(--c); border-color: var(--c); color: #fff; }
+
+/* ================= sweet glass + gov-tech split-screen shell ================= */
+body { background: var(--page); background-attachment: fixed; min-height: 100vh; }
+body::before { background: transparent; }
+body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(40vw 40vw at 8% 10%, var(--blob1), transparent 70%),
+              radial-gradient(36vw 36vw at 95% 8%, var(--blob2), transparent 70%),
+              radial-gradient(42vw 42vw at 60% 100%, var(--blob3), transparent 70%); }
+.glass, .tablebox, .side, .card, .empty, .drawer, .filters select, .searchbox {
+  background: var(--glass); -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid var(--glass-line); box-shadow: var(--shadow); }
+.shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); gap: 20px; min-height: 100vh;
+  padding: 20px max(20px, env(safe-area-inset-right, 0px)) 20px max(20px, env(safe-area-inset-left, 0px)); }
+.content { min-width: 0; display: grid; gap: 14px; align-content: start; }
+.mainwrap { max-width: none; padding: 0; margin: 0; gap: 18px; }
+.sidenav { border-radius: 24px; padding: 20px 14px; display: flex; flex-direction: column; gap: 18px;
+  position: sticky; top: calc(20px + env(safe-area-inset-top, 0px)); height: calc(100vh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+.brand-row { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+.brand-logo { width: 42px; height: 42px; flex: none; }
+.brand-txt b { font-family: var(--font-display); font-weight: 400; font-size: 1.25rem; display: block; line-height: 1.15; }
+.brand-txt small { color: var(--muted); font-size: .78rem; }
+.nav-h { font-size: .72rem; letter-spacing: .08em; color: var(--muted); padding: 0 12px; }
+.sidenav .nav { display: grid; gap: 4px; padding: 0; }
+.sidenav .nav a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 0; color: var(--muted);
+  text-decoration: none; font-family: var(--font-body); font-size: .95rem; font-weight: 500; }
+.sidenav .nav a:hover { background: var(--glass-strong); }
+.sidenav .nav a svg, .tabbar svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.sidenav .nav a[aria-current="page"] { background: var(--glass-strong); color: var(--accent); box-shadow: 0 4px 14px rgba(123,92,240,.14); }
+.cnt { margin-left: auto; font-size: .74rem; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 0 8px; font-variant-numeric: tabular-nums; }
+.cnt:empty { display: none; }
+.side-foot { margin-top: auto; display: grid; gap: 10px; }
+.me-card { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 16px; background: var(--glass-strong); }
+.av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 600; flex: none;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent)); }
+.me-txt { min-width: 0; } .me-txt b { display: block; font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-txt small { color: var(--muted); font-size: .76rem; }
+.foot-btns { display: flex; gap: 8px; align-items: center; }
+.foot-btns .theme { background: var(--glass-strong); border: 1px solid var(--glass-line); margin: 0; order: 0; }
+.foot-btns .logout { flex: 1; margin: 0; order: 0; justify-content: center; background: var(--glass-strong); border: 1px solid var(--glass-line); color: var(--fg); font-size: .85rem; padding: 8px 12px; border-radius: 999px; }
+.topbar { position: static; background: transparent; border: 0; box-shadow: none; padding: 2px 4px 0; }
+.topbar::after { display: none; }
+.crumb { font-size: .8rem; color: var(--muted); margin-bottom: 2px; }
+.topbar h1 { font-size: 2rem; line-height: 1.2; font-weight: 400; }
+.topbar small { color: var(--muted); font-size: .82rem; }
+.ov { display: grid; gap: 16px; }
+.toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.searchbox { flex: 1 1 280px; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 14px; }
+.searchbox svg { width: 16px; height: 16px; fill: none; stroke: var(--muted); stroke-width: 2; flex: none; }
+.searchbox input[type=search] { flex: 1; min-width: 0; border: 0; background: transparent; box-shadow: none; padding: 11px 0; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.searchbox input:focus { outline: none; } .searchbox:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.btn { border-radius: 12px; font-weight: 500; }
+.btn:not(.ghost) { background: linear-gradient(135deg, var(--accent-2), var(--accent)); color: #fff; border: 0; box-shadow: 0 8px 20px rgba(123,92,240,.26); }
+.btn.ghost { background: var(--glass-strong); border: 1px solid var(--glass-line); color: var(--fg); box-shadow: none; }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.kpi { border-radius: 20px; padding: 16px 18px; display: grid; gap: 2px; text-align: left; font: inherit; color: var(--fg); }
+.kpi span { font-size: .82rem; color: var(--muted); }
+.kpi b { font-family: var(--font-display); font-weight: 400; font-size: 2.1rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.kpi small { font-size: .78rem; color: var(--muted); }
+.kpi.alert { cursor: pointer; } .kpi.alert b { color: var(--issue); }
+.kpi.alert[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--issue), var(--shadow); }
+.stagecard { border-radius: 20px; padding: 16px 18px; display: grid; gap: 12px; }
+.sbar { display: flex; height: 12px; border-radius: 999px; overflow: hidden; gap: 3px; background: var(--line); }
+.sbar i { background: var(--c); }
+:root { --none: var(--muted); --none-bg: var(--done-bg); }
+.stagecard .pipe { display: flex; flex-wrap: wrap; gap: 6px; border: 0; background: transparent; box-shadow: none; border-radius: 0; overflow: visible; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.stagecard .stage { display: inline-flex; flex-direction: row-reverse; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px; border: 1px solid transparent; background: transparent; transform: none; }
+.stagecard .stage + .stage { border-left: 1px solid transparent; }
+.stagecard .stage .n { font-family: var(--font-body); font-size: .88rem; font-weight: 600; color: var(--fg); }
+.stagecard .stage .l { font-size: .86rem; color: var(--fg); opacity: 1; }
+.stagecard .stage:hover { background: var(--glass-strong); }
+.stagecard .stage[aria-pressed="true"] { background: var(--cb); border-color: var(--c); }
+.filters { gap: 8px; }
+.filters select { border-radius: 12px; padding: 8px 12px; flex: 0 1 auto; }
+.count { color: var(--muted); }
+.splitview { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.listcard { border-radius: 22px; padding: 6px; }
+.prow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 14px; padding: 12px 14px; border-radius: 14px; cursor: pointer; }
+.prow + .prow { box-shadow: 0 -1px 0 var(--line); }
+.prow:hover { background: rgba(255,255,255,.35); }
+.prow.sel { background: var(--glass-strong); box-shadow: inset 3px 0 0 var(--accent); }
+.prow.sel + .prow { box-shadow: none; }
+.prow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.pt { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pr { grid-row: 1 / span 2; grid-column: 2; display: grid; align-content: center; justify-items: end; gap: 2px; font-size: .78rem; color: var(--muted); white-space: nowrap; }
+.pm { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: .8rem; color: var(--muted); min-width: 0; }
+.pm .pill { font-size: .78rem; }
+.plist-empty, .pane-empty { padding: 36px 16px; text-align: center; color: var(--muted); }
+.pane { border-radius: 22px; padding: 22px; display: grid; gap: 16px; position: sticky; top: calc(20px + env(safe-area-inset-top, 0px)); max-height: calc(100vh - 40px); overflow-y: auto; }
+.pane .tag { font-size: .78rem; color: var(--muted); }
+.pane h2 { font-size: 1.5rem; line-height: 1.3; overflow-wrap: anywhere; }
+.pane h3 { font-size: 1.1rem; margin: 0 0 10px; }
+.stepper { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.stepper div { display: grid; gap: 6px; font-size: .72rem; color: var(--muted); }
+.stepper i { height: 6px; border-radius: 999px; background: var(--line); }
+.stepper .on i { background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
+.stepper .cur { color: var(--accent); font-weight: 600; }
+.kvg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kvg > div { background: var(--glass-strong); border-radius: 14px; padding: 10px 12px; min-width: 0; }
+.kvg span { font-size: .75rem; color: var(--muted); display: block; }
+.kvg b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.kvg small { color: var(--muted); }
+.pstatus { background: var(--glass-strong); border-radius: 14px; padding: 12px 14px; border-left: 3px solid var(--accent); white-space: pre-line; overflow-wrap: anywhere; }
+.pane-actions { display: flex; gap: 10px; }
+.split { gap: 18px; }
+.side { border-radius: 20px; padding: 12px 10px; }
+.card { border-radius: 20px; padding: 16px 18px; border-top: 1px solid var(--glass-line); }
+.cards { gap: 14px; }
+.drawer { border-radius: 24px 0 0 24px; background: var(--glass-strong); }
+.tabbar { display: none; }
+@media (max-width: 1000px) {
+  .shell { grid-template-columns: 1fr; gap: 12px; padding: 12px max(12px, env(safe-area-inset-right, 0px)) calc(92px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+  .sidenav { position: static; height: auto; flex-direction: row; align-items: center; padding: 10px 12px; border-radius: 18px; gap: 10px; }
+  .sidenav .nav, .nav-h, .me-card { display: none; }
+  .brand-logo { width: 34px; height: 34px; } .brand-txt b { font-size: 1.1rem; } .brand-txt small { display: none; }
+  .side-foot { margin: 0 0 0 auto; }
+  .foot-btns .logout { flex: none; }
+  .topbar h1 { font-size: 1.6rem; }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .kpi b { font-size: 1.7rem; }
+  .splitview { grid-template-columns: 1fr; }
+  .pane { display: none; }
+  .pt { white-space: normal; }
+  .tabbar { display: flex; position: fixed; z-index: 15; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px)); border-radius: 20px; padding: 8px; justify-content: space-around; }
+  .tabbar a { display: grid; justify-items: center; gap: 2px; border: 0; flex: 1; font-family: var(--font-body); font-size: .72rem; color: var(--muted); text-decoration: none; padding: 4px 12px; border-radius: 12px; }
+  .tabbar a[aria-current="page"] { color: var(--accent); background: var(--glass-strong); }
+  .drawer { border-radius: 0; }
+}
+@media (max-width: 520px) { .filters > select { flex: 1 1 100%; } .foot-btns .logout { font-size: 0; padding: 8px; width: 38px; height: 38px; }
+  .foot-btns .logout::before { content: "ออก"; font-size: .78rem; } }
+@media (prefers-reduced-motion: reduce) { .stage { transition: none; } }
 </style>
 
-<header>
-  <div class="wrap">
-    <div class="head">
-      <h1>สถานะงาน บสก.<small id="sub">กำลังโหลดข้อมูล…</small></h1>
-      <button class="theme" id="themeBtn" type="button" aria-label="เปลี่ยนโหมดสี"><svg id="themeIcon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"></svg></button>
-      <button class="theme logout" id="logoutBtn" type="button">ออกจากระบบ</button>
-      <nav aria-label="หน้า">
-        <a href="#overview" id="navOverview">โครงการรวม</a>
-        <a href="#staff" id="navStaff">เจ้าหน้าที่</a>
-      </nav>
-    </div>
+<div class="shell">
+<aside class="sidenav glass" aria-label="เมนูหลัก">
+  <div class="brand-row"><img class="brand-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPCEtLSBvcmlnaW5hbCBpY29uOiBjcmVhbSB0YWJieSBjYXQgZmFjZSB3aXRoIGJpZyByb3VuZCBnbGFzc2VzIC0tPgogIDxnIHN0cm9rZT0iIzJhMWMxNCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+CiAgICA8cGF0aCBkPSJNMTAgMzAgTDEyIDYgTDI4IDE4IFoiIGZpbGw9IiNmZmY0ZWEiLz4KICAgIDxwYXRoIGQ9Ik01NCAzMCBMNTIgNiBMMzYgMTggWiIgZmlsbD0iI2ZmZjRlYSIvPgogICAgPHBhdGggZD0iTTE0IDIyIEwxNSAxMSBMMjMgMTggWiIgZmlsbD0iI2Y1YTNhNiIgc3Ryb2tlPSJub25lIi8+CiAgICA8cGF0aCBkPSJNNTAgMjIgTDQ5IDExIEw0MSAxOCBaIiBmaWxsPSIjZjVhM2E2IiBzdHJva2U9Im5vbmUiLz4KICAgIDxlbGxpcHNlIGN4PSIzMiIgY3k9IjM3IiByeD0iMjUiIHJ5PSIyMSIgZmlsbD0iI2ZmZjRlYSIvPgogIDwvZz4KICA8ZyBmaWxsPSIjZjBhMzVhIj4KICAgIDxwYXRoIGQ9Ik0yOCAxNy41IHE0IC0xLjUgOCAwIGwtMSA1IHEtMyAtMSAtNiAwIFoiLz4KICAgIDxwYXRoIGQ9Ik0xNyAyMiBxNCAtMiA3IC0xIGwtMSA0IHEtMyAwIC01LjUgMS41IFoiLz4KICAgIDxwYXRoIGQ9Ik00NyAyMiBxLTQgLTIgLTcgLTEgbDEgNCBxMyAwIDUuNSAxLjUgWiIvPgogIDwvZz4KICA8ZyBzdHJva2U9IiMxNDE0MTQiIHN0cm9rZS13aWR0aD0iMy42IiBmaWxsPSIjZmZmZmZmIj4KICAgIDxjaXJjbGUgY3g9IjIxLjUiIGN5PSIzNyIgcj0iOS41Ii8+CiAgICA8Y2lyY2xlIGN4PSI0Mi41IiBjeT0iMzciIHI9IjkuNSIvPgogICAgPHBhdGggZD0iTTMxIDM2IHExIC0xLjYgMiAwIiBmaWxsPSJub25lIi8+CiAgICA8cGF0aCBkPSJNMTIgMzUgTDcuNSAzMy41IE01MiAzNSBMNTYuNSAzMy41IiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxjaXJjbGUgY3g9IjIxLjUiIGN5PSIzNy41IiByPSI1LjQiIGZpbGw9IiMxNDE0MTQiLz4KICA8Y2lyY2xlIGN4PSI0Mi41IiBjeT0iMzcuNSIgcj0iNS40IiBmaWxsPSIjMTQxNDE0Ii8+CiAgPGNpcmNsZSBjeD0iMTkuNiIgY3k9IjM1LjQiIHI9IjEuOCIgZmlsbD0iI2ZmZmZmZiIvPgogIDxjaXJjbGUgY3g9IjQwLjYiIGN5PSIzNS40IiByPSIxLjgiIGZpbGw9IiNmZmZmZmYiLz4KICA8cGF0aCBkPSJNMzAuMiA0OC4yIGgzLjYgbC0xLjggMi4yIFoiIGZpbGw9IiNmMDhhOTUiIHN0cm9rZT0iIzJhMWMxNCIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgPHBhdGggZD0iTTI4LjIgNTEuNiBxMS45IDEuOSAzLjggMCBxMS45IDEuOSAzLjggMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmExYzE0IiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=" alt=""><div class="brand-txt"><b>สถานะงาน บสก.</b><small>ฝ่ายบริหารทรัพย์สินกลาง</small></div></div>
+  <div class="nav-h">เมนู</div>
+  <nav class="nav" aria-label="หน้า">
+    <a href="#overview" id="navOverview" data-nav="overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span>โครงการรวม</span><span class="cnt" id="cntAll"></span></a>
+    <a href="#mine" id="navMine" data-nav="mine" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><span>งานของฉัน</span><span class="cnt" id="cntMine"></span></a>
+    <a href="#staff" id="navStaff" data-nav="staff"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg><span>เจ้าหน้าที่</span></a>
+  </nav>
+  <div class="side-foot">
+    <div class="me-card" id="meCard" hidden><span class="av" id="meAv"></span><div class="me-txt"><b id="meName"></b><small id="meRole"></small></div></div>
+    <div class="foot-btns"><button class="theme" id="themeBtn" type="button" aria-label="เปลี่ยนโหมดสี"><svg id="themeIcon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"></svg></button>
+      <button class="theme logout" id="logoutBtn" type="button">ออกจากระบบ</button></div>
   </div>
+</aside>
+<div class="content">
+<header class="topbar">
+  <div class="crumb" id="crumb">หน้าหลัก / โครงการรวม</div>
+  <h1 id="pageTitle">โครงการรวม</h1>
+  <small id="sub">กำลังโหลดข้อมูล…</small>
 </header>
 
-<main class="wrap">
+<main class="wrap mainwrap">
   <div id="notice" class="notice" hidden></div>
 
   <section id="pageOverview" hidden>
-    <div style="display:grid;gap:14px">
-      <div class="bar">
-        <h2>ภาพรวมโครงการตามขั้นตอน</h2>
-        <div class="bar-actions"><button class="btn ghost sm" id="exportWordBtn" type="button" hidden>Export Word</button></div>
+    <div class="ov">
+      <div class="toolbar">
+        <label class="searchbox glass"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="search" id="q" placeholder="ค้นหาโครงการ เจ้าหน้าที่ หรือสถานะ" aria-label="ค้นหา"></label>
+        <div class="bar-actions"><button class="btn ghost" id="exportWordBtn" type="button" hidden>Export Word</button><button class="btn" id="addTopBtn" type="button">+ เพิ่มโครงการ</button></div>
       </div>
-      <div class="pipe" id="pipe" role="group" aria-label="กรองตามขั้นตอน"></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="stagecard glass">
+        <div class="sbar" id="sbar" aria-hidden="true"></div>
+        <div class="pipe" id="pipe" role="group" aria-label="กรองตามขั้นตอน"></div>
+      </div>
       <div class="filters">
-        <input type="search" id="q" placeholder="ค้นหาชื่อโครงการหรือสถานะ" aria-label="ค้นหา">
         <select id="fType" aria-label="ประเภท"></select>
         <select id="fOwner" aria-label="ผู้รับผิดชอบ"></select>
         <select id="fMethod" aria-label="วิธีการ"></select>
         <select id="fSort" aria-label="เรียงลำดับ"><option value="">เรียงตามอัปเดตล่าสุด</option><option value="due">เรียงตามวันส่งมอบที่ใกล้ที่สุด</option><option value="budget">เรียงตามวงเงินมากไปน้อย</option><option value="order">เรียงตามลำดับในชีต</option></select>
         <span class="count" id="count"></span>
       </div>
-      <div class="tablebox">
-        <table>
-          <thead><tr><th>โครงการ</th><th>ขั้นตอน</th><th>สถานะล่าสุด</th><th>วงเงิน / วิธีการ</th><th>ผู้รับผิดชอบ</th><th>วันส่งมอบ</th><th>อัปเดต</th></tr></thead>
-          <tbody id="tbody"></tbody>
-        </table>
+      <div class="splitview">
+        <section class="listcard glass" aria-label="รายการโครงการ"><div class="plist" id="tbody" role="list"></div></section>
+        <section class="pane glass" id="pane" aria-live="polite"></section>
       </div>
     </div>
   </section>
@@ -368,6 +519,13 @@ th { border-bottom-color: var(--accent); }
     </div>
   </section>
 </main>
+</div>
+</div>
+<nav class="tabbar glass" aria-label="หน้า">
+  <a href="#overview" data-nav="overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span>โครงการรวม</span></a>
+  <a href="#mine" data-nav="mine" id="tabMine" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><span>งานของฉัน</span></a>
+  <a href="#staff" data-nav="staff"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg><span>เจ้าหน้าที่</span></a>
+</nav>
 
 <div class="scrim" id="scrim" hidden></div>
 
@@ -455,15 +613,57 @@ th { border-bottom-color: var(--accent); }
 
 <div class="toast" id="toast" hidden></div>
 
-<div id="gate" hidden style="position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--bg);padding:16px">
-  <form id="gateForm" style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px 24px;width:min(360px,100%);display:grid;gap:14px">
-    <h2 style="margin:0">สถานะงาน บสก.</h2>
-    <p class="muted" style="margin:0">ใส่รหัสผ่านของฝ่ายเพื่อเข้าใช้งาน</p>
-    <input type="password" id="gatePin" autocomplete="current-password" aria-label="รหัสผ่าน" placeholder="รหัสผ่าน" style="font-size:1.1rem">
-    <p class="err" id="gateErr" role="alert"></p>
-    <button class="btn" type="submit">เข้าสู่ระบบ</button>
-  </form>
+<div id="gate" class="gate" hidden>
+  <section class="gate-brand">
+    <div class="brand-row"><img class="brand-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPCEtLSBvcmlnaW5hbCBpY29uOiBjcmVhbSB0YWJieSBjYXQgZmFjZSB3aXRoIGJpZyByb3VuZCBnbGFzc2VzIC0tPgogIDxnIHN0cm9rZT0iIzJhMWMxNCIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+CiAgICA8cGF0aCBkPSJNMTAgMzAgTDEyIDYgTDI4IDE4IFoiIGZpbGw9IiNmZmY0ZWEiLz4KICAgIDxwYXRoIGQ9Ik01NCAzMCBMNTIgNiBMMzYgMTggWiIgZmlsbD0iI2ZmZjRlYSIvPgogICAgPHBhdGggZD0iTTE0IDIyIEwxNSAxMSBMMjMgMTggWiIgZmlsbD0iI2Y1YTNhNiIgc3Ryb2tlPSJub25lIi8+CiAgICA8cGF0aCBkPSJNNTAgMjIgTDQ5IDExIEw0MSAxOCBaIiBmaWxsPSIjZjVhM2E2IiBzdHJva2U9Im5vbmUiLz4KICAgIDxlbGxpcHNlIGN4PSIzMiIgY3k9IjM3IiByeD0iMjUiIHJ5PSIyMSIgZmlsbD0iI2ZmZjRlYSIvPgogIDwvZz4KICA8ZyBmaWxsPSIjZjBhMzVhIj4KICAgIDxwYXRoIGQ9Ik0yOCAxNy41IHE0IC0xLjUgOCAwIGwtMSA1IHEtMyAtMSAtNiAwIFoiLz4KICAgIDxwYXRoIGQ9Ik0xNyAyMiBxNCAtMiA3IC0xIGwtMSA0IHEtMyAwIC01LjUgMS41IFoiLz4KICAgIDxwYXRoIGQ9Ik00NyAyMiBxLTQgLTIgLTcgLTEgbDEgNCBxMyAwIDUuNSAxLjUgWiIvPgogIDwvZz4KICA8ZyBzdHJva2U9IiMxNDE0MTQiIHN0cm9rZS13aWR0aD0iMy42IiBmaWxsPSIjZmZmZmZmIj4KICAgIDxjaXJjbGUgY3g9IjIxLjUiIGN5PSIzNyIgcj0iOS41Ii8+CiAgICA8Y2lyY2xlIGN4PSI0Mi41IiBjeT0iMzciIHI9IjkuNSIvPgogICAgPHBhdGggZD0iTTMxIDM2IHExIC0xLjYgMiAwIiBmaWxsPSJub25lIi8+CiAgICA8cGF0aCBkPSJNMTIgMzUgTDcuNSAzMy41IE01MiAzNSBMNTYuNSAzMy41IiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxjaXJjbGUgY3g9IjIxLjUiIGN5PSIzNy41IiByPSI1LjQiIGZpbGw9IiMxNDE0MTQiLz4KICA8Y2lyY2xlIGN4PSI0Mi41IiBjeT0iMzcuNSIgcj0iNS40IiBmaWxsPSIjMTQxNDE0Ii8+CiAgPGNpcmNsZSBjeD0iMTkuNiIgY3k9IjM1LjQiIHI9IjEuOCIgZmlsbD0iI2ZmZmZmZiIvPgogIDxjaXJjbGUgY3g9IjQwLjYiIGN5PSIzNS40IiByPSIxLjgiIGZpbGw9IiNmZmZmZmYiLz4KICA8cGF0aCBkPSJNMzAuMiA0OC4yIGgzLjYgbC0xLjggMi4yIFoiIGZpbGw9IiNmMDhhOTUiIHN0cm9rZT0iIzJhMWMxNCIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgPHBhdGggZD0iTTI4LjIgNTEuNiBxMS45IDEuOSAzLjggMCBxMS45IDEuOSAzLjggMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmExYzE0IiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=" alt=""><div class="brand-txt"><b>สถานะงาน บสก.</b><small>ฝ่ายบริหารทรัพย์สินกลาง</small></div></div>
+    <div class="gate-hero"><h1>ติดตามทุกโครงการ ในที่เดียว</h1>
+      <p>ดูสถานะ วงเงิน และวันส่งมอบของทุกโครงการ เจ้าหน้าที่อัปเดตงานของตัวเองได้ทันที และระบบบันทึกทุกการเปลี่ยนแปลงพร้อมชื่อผู้แก้</p></div>
+    <div class="gate-feat"><div><b>5</b><span>ขั้นตอนจัดซื้อจัดจ้าง</span></div><div><b>Word</b><span>Export ตามฟอร์มของฝ่าย</span></div><div><b>รายคน</b><span>รหัสประจำตัวเจ้าหน้าที่</span></div></div>
+  </section>
+  <section class="gate-side">
+    <form id="gateForm" class="gate-card glass">
+      <h2>เข้าสู่ระบบ</h2>
+      <p class="muted">ใช้รหัสประจำตัวที่หัวหน้าตั้งให้</p>
+      <label class="field"><span>รหัสประจำตัว</span><input type="password" id="gatePin" autocomplete="current-password" placeholder="รหัสอย่างน้อย 6 ตัว"></label>
+      <p class="err" id="gateErr" role="alert"></p>
+      <button class="btn" type="submit">เข้าสู่ระบบ</button>
+      <div class="gate-secure"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>ระบบเก็บรหัสแบบเข้ารหัส ทุกการแก้ไขบันทึกชื่อผู้แก้</div>
+    </form>
+  </section>
 </div>
+<style>
+.gate { position: fixed; inset: 0; z-index: 50; display: grid; grid-template-columns: 1.15fr 1fr; background: var(--page); overflow-y: auto; }
+.gate[hidden] { display: none; }
+.gate-brand { position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; gap: 28px; color: #fff;
+  padding: calc(48px + env(safe-area-inset-top, 0px)) 48px 48px max(48px, env(safe-area-inset-left, 0px));
+  background: linear-gradient(140deg, #8f6df5 0%, #b17cf0 45%, #f29ac4 100%); }
+.gate-brand::before, .gate-brand::after { content: ""; position: absolute; border-radius: 50%; }
+.gate-brand::before { width: 420px; height: 420px; right: -120px; top: -90px; background: rgba(255,255,255,.16); }
+.gate-brand::after { width: 300px; height: 300px; left: -80px; bottom: -70px; background: rgba(120,200,255,.28); }
+.gate-brand > * { position: relative; z-index: 1; }
+.gate-brand .brand-txt small { color: rgba(255,255,255,.85); }
+.gate-hero h1 { font-family: var(--font-display); font-weight: 400; font-size: 3rem; line-height: 1.15; margin: 0 0 12px; max-width: 14ch; }
+.gate-hero p { font-size: 1.05rem; max-width: 42ch; margin: 0; opacity: .92; }
+.gate-feat { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.gate-feat div { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35); border-radius: 16px; padding: 14px; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.gate-feat b { font-family: var(--font-display); font-weight: 400; font-size: 1.5rem; display: block; }
+.gate-feat span { font-size: .85rem; opacity: .92; }
+.gate-side { display: grid; place-items: center; padding: 40px max(24px, env(safe-area-inset-right, 0px)) 40px 24px; }
+.gate-card { width: min(400px, 100%); border-radius: 24px; padding: 34px 30px; display: grid; gap: 14px; }
+.gate-card h2 { font-size: 2rem; }
+.gate-card p.muted { margin: 0; }
+.gate-card input { font-size: 1.1rem !important; padding: 12px 14px; border-radius: 12px; letter-spacing: .2em; background: var(--glass-strong); }
+.gate-card .btn { padding: 12px; font-size: 1rem; }
+.gate-card input:placeholder-shown { letter-spacing: normal; }
+.gate-secure { display: flex; gap: 8px; align-items: center; font-size: .8rem; color: var(--muted); }
+.gate-secure svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; flex: none; }
+@media (max-width: 860px) {
+  .gate { grid-template-columns: 1fr; align-content: start; }
+  .gate-brand { padding: calc(24px + env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) 26px max(20px, env(safe-area-inset-left, 0px)); gap: 16px; }
+  .gate-hero h1 { font-size: 2rem; } .gate-hero p { font-size: .95rem; } .gate-feat { display: none; }
+  .gate-side { padding: 24px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px)); }
+}
+</style>
 <script>
 /* ===== ตั้งค่า: วาง URL ของ Apps Script (Web app) ที่ได้จากขั้นตอน Deploy ตรงนี้ ===== */
 const API_URL = "https://script.google.com/macros/s/AKfycbzOxQmm1DNmWkk05eGNZ92KSakJ7Xj2LOjRk2cgBiyBkpIj4MI0MLLg3VAZMEZggr5M/exec";
@@ -497,7 +697,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzOxQmm1DNmWkk05eGNZ92K
   }
   function showMe() {
     const b = document.getElementById("logoutBtn");
-    if (b && myName) { b.textContent = myName + " | ออกจากระบบ"; b.title = "เข้าระบบในชื่อ " + myName; }
+    if (b && myName) { b.textContent = "ออกจากระบบ"; b.title = "เข้าระบบในชื่อ " + myName; }
   }
   let loginP = null;
   function ensureLogin() {
@@ -651,11 +851,15 @@ applyTheme();
 
 // ---------- routing ----------
 function route() {
-  const h = location.hash.replace("#", "") || "overview";
-  const page = h === "staff" ? "staff" : "overview";
+  let h = location.hash.replace("#", "") || "overview";
+  if (h === "mine" && !S.myName) h = "staff";
+  const page = h === "overview" ? "overview" : "staff";
+  if (h === "mine") S.staff = S.myName;
   $("pageOverview").hidden = page !== "overview"; $("pageStaff").hidden = page !== "staff";
-  $("navOverview").toggleAttribute("aria-current", page === "overview"); if (page === "overview") $("navOverview").setAttribute("aria-current", "page");
-  $("navStaff").toggleAttribute("aria-current", page === "staff"); if (page === "staff") $("navStaff").setAttribute("aria-current", "page");
+  document.querySelectorAll("[data-nav]").forEach(a => { if (a.dataset.nav === h) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  const titles = { overview: "โครงการรวม", mine: "งานของฉัน", staff: "เจ้าหน้าที่" };
+  $("pageTitle").textContent = titles[h] || "โครงการรวม";
+  $("crumb").textContent = "หน้าหลัก / " + (titles[h] || "โครงการรวม");
   render();
 }
 addEventListener("hashchange", route);
@@ -700,21 +904,75 @@ function renderOverview() {
   const rows = filtered();
   const sum = rows.reduce((t, p) => t + (Number(p.budget) || 0), 0), withB = rows.filter(p => Number(p.budget) > 0).length;
   $("count").textContent = `แสดง ${rows.length} จาก ${P.length} โครงการ | วงเงินรวม ${baht(sum)} บาท` + (withB < rows.length ? ` (ระบุแล้ว ${withB} โครงการ)` : "");
+  renderKpis(P);
   const tb = $("tbody"); tb.replaceChildren();
   if (!rows.length) {
-    const tr = document.createElement("tr"); tr.innerHTML = `<td colspan="7" class="muted" style="text-align:center;padding:28px">${S.loaded ? (P.length ? "ไม่พบโครงการตามตัวกรองนี้" : "ยังไม่มีโครงการ เพิ่มได้จากหน้าเจ้าหน้าที่") : "กำลังโหลดโครงการ…"}</td>`;
-    tr.style.cursor = "default"; tb.append(tr); return;
+    tb.innerHTML = `<div class="plist-empty">${S.loaded ? (P.length ? "ไม่พบโครงการตามตัวกรองนี้" : "ยังไม่มีโครงการ กด “+ เพิ่มโครงการ” เพื่อเริ่ม") : "กำลังโหลดโครงการ…"}</div>`;
+    renderPane(null); return;
   }
-  rows.forEach((p, i) => {
-    const tr = document.createElement("tr"); tr.tabIndex = 0;
-    tr.innerHTML = `<td class="title">${esc(p.title)}<div class="type">${esc(p.type)}</div></td>
-      <td>${stagePill(p)}</td><td class="status">${esc(p.status) || '<span class="muted">—</span>'}</td>
-      <td class="money">${p.budget ? baht(p.budget) : '<span class="muted">—</span>'}${p.method ? `<div class="type">${esc(p.method)}</div>` : ""}</td>
-      <td>${esc(p.owner)}</td><td class="duecell">${dueBadge(p, true)}</td><td class="when">${when(p.updatedAt)}${p.updatedByName ? `<div class="by">โดย ${esc(p.updatedByName)}</div>` : ""}</td>`;
-    tr.onclick = () => openDetail(p.id);
-    tr.onkeydown = e => { if (e.key === "Enter") openDetail(p.id); };
-    tb.append(tr);
+  if (!rows.some(p => p.id === S.sel)) S.sel = rows[0].id;
+  rows.forEach(p => {
+    const r = document.createElement("div"); r.className = "prow" + (p.id === S.sel ? " sel" : ""); r.tabIndex = 0; r.setAttribute("role", "listitem");
+    r.innerHTML = `<div class="pt">${esc(p.title)}</div>
+      <div class="pr"><span>${when(p.updatedAt)}</span>${p.updatedByName ? `<span>โดย ${esc(p.updatedByName)}</span>` : ""}</div>
+      <div class="pm">${stagePill(p)}<span>${esc(p.owner || "-")}</span>${p.due ? dueBadge(p) : ""}</div>`;
+    const pick = () => { if (narrow()) { openDetail(p.id); return; } S.sel = p.id; tb.querySelectorAll(".prow").forEach(x => x.classList.toggle("sel", x === r)); renderPane(p); };
+    r.onclick = pick; r.onkeydown = e => { if (e.key === "Enter") pick(); };
+    tb.append(r);
   });
+  renderPane(rows.find(p => p.id === S.sel));
+}
+const narrow = () => matchMedia("(max-width: 1000px)").matches;
+function renderKpis(P) {
+  const total = P.length, contract = P.filter(p => p.stage === "contract").length, alert = P.filter(isDueAlert).length;
+  const week = P.filter(p => p.updatedAt && Date.now() - p.updatedAt < 7 * 864e5).length;
+  const withB = P.filter(p => Number(p.budget) > 0), sum = withB.reduce((t, p) => t + Number(p.budget), 0);
+  const money = sum >= 1e6 ? `${(sum / 1e6).toLocaleString("th-TH", { maximumFractionDigits: 1 })} ล้าน` : baht(sum);
+  $("kpis").innerHTML = `
+    <div class="kpi glass"><span>โครงการทั้งหมด</span><b>${total}</b><small>อัปเดตใน 7 วัน ${week} โครงการ</small></div>
+    <div class="kpi glass"><span>ลงนาม / บริหารสัญญา</span><b>${contract}</b><small>${total ? Math.round(contract / total * 100) : 0}% ของทั้งหมด</small></div>
+    <button type="button" class="kpi glass alert" id="kpiDue" aria-pressed="${S.stage === "due"}"><span>เกิน / ครบกำหนดใน 7 วัน</span><b>${alert}</b><small>${alert ? "กดเพื่อดูรายการ" : "ไม่มีงานเร่ง"}</small></button>
+    <div class="kpi glass"><span>วงเงินรวม (บาท)</span><b>${money}</b><small>ระบุแล้ว ${withB.length} จาก ${total} โครงการ</small></div>`;
+  $("kpiDue").onclick = () => { S.stage = S.stage === "due" ? null : "due"; render(); };
+  const seg = STAGES.map(s => [s.key, P.filter(p => p.stage === s.key).length]);
+  const other = total - seg.reduce((t, x) => t + x[1], 0);
+  if (other > 0) seg.push(["none", other]);
+  $("sbar").innerHTML = seg.filter(x => x[1]).map(([k, n]) => `<i style="--c: var(--${k}); flex: ${n}"></i>`).join("");
+  $("cntAll").textContent = total;
+  if (S.myName) { const m = P.filter(p => p.owner === S.myName).length; $("cntMine").textContent = m; }
+}
+let paneKey = "";
+async function renderPane(p) {
+  const pane = $("pane");
+  if (!p) { paneKey = ""; pane.innerHTML = `<div class="pane-empty">เลือกโครงการจากรายการเพื่อดูรายละเอียด</div>`; return; }
+  const key = p.id + "|" + (p.updatedAt || 0) + "|" + (p.owner || "") + "|" + (p.due || "");
+  if (key === paneKey) return;
+  paneKey = key;
+  const si = SI[p.stage] ?? -1;
+  pane.innerHTML = `
+    <div><div class="tag">${esc(p.type)}${p.method ? " | " + esc(p.method) : ""}</div><h2>${esc(p.title)}</h2></div>
+    <div class="stepper">${STAGES.map((st, i) => `<div class="${i <= si ? "on" : ""}${i === si ? " cur" : ""}"><i></i>${esc(st.label.split(" / ")[0])}</div>`).join("")}</div>
+    <div class="kvg">
+      <div><span>วงเงิน</span><b>${p.budget ? baht(p.budget) + " บาท" : "—"}</b></div>
+      <div><span>วันส่งมอบ</span><b>${p.due ? thDate(p.due) : "ยังไม่กำหนด"}</b> ${p.due ? dueBadge(p) : ""}</div>
+      <div><span>ผู้รับผิดชอบ</span><b>${esc(p.owner || "—")}</b></div>
+      <div><span>อัปเดตล่าสุด</span><b>${when(p.updatedAt)}</b>${p.updatedByName ? `<small> โดย ${esc(p.updatedByName)}</small>` : ""}</div>
+    </div>
+    <div class="pstatus">${esc(p.status) || '<span class="muted">ยังไม่มีสถานะ</span>'}</div>
+    <div class="pane-actions"><button class="btn" type="button" id="paneUpdate">อัปเดตสถานะ</button></div>
+    <div><h3>ประวัติการอัปเดต</h3><ul class="log" id="paneLog"><li class="muted">กำลังโหลดประวัติ…</li></ul></div>`;
+  $("paneUpdate").disabled = !S.db;
+  $("paneUpdate").onclick = () => openUpdate(p.id);
+  const log = $("paneLog");
+  if (!S.db) { log.innerHTML = `<li class="muted">ต้องเข้าสู่ระบบเพื่อดูประวัติ</li>`; return; }
+  try {
+    const q = await S.db.collection(`projects/${p.id}/log`).orderBy("at", "desc").limit(30).get();
+    if (paneKey !== key) return;
+    const items = q.docs.map(d => d.data());
+    log.innerHTML = items.length ? items.map(x => `<li><div class="t">${new Date(x.at).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" })} | ${esc(x.staff || "")}</div>
+      <div>${stagePill(x)}</div><div class="s">${esc(x.status)}</div></li>`).join("")
+      : `<li class="muted">ยังไม่มีการอัปเดตผ่านระบบ</li>`;
+  } catch { if (paneKey === key) log.innerHTML = `<li class="muted">โหลดประวัติไม่สำเร็จ</li>`; }
 }
 $("q").oninput = e => { S.q = e.target.value; renderOverview(); };
 $("fType").onchange = e => { S.type = e.target.value; renderOverview(); };
@@ -739,7 +997,7 @@ function renderStaff() {
   }
   sel.value = S.staff || ""; sel.onchange = () => pick(sel.value);
   const cards = $("staffCards"); cards.replaceChildren();
-  $("addBtn").disabled = !S.db;
+  $("addBtn").disabled = !S.db; $("addTopBtn").disabled = !S.db;
   $("addStaffBtn").hidden = !(S.db && S.canEdit);
   $("pinsBtn").hidden = !(S.db && S.db.admin && S.canEdit);
   $("transferBtn").hidden = !(S.db && S.staff && S.projects.some(p => p.owner === S.staff));
@@ -843,8 +1101,8 @@ function openUpdate(id) {
   $("uProj").textContent = p.title;
   document.querySelectorAll('input[name="uStage"]').forEach(r => r.checked = r.value === p.stage);
   $("uStatus").value = p.status || ""; dpSet("uDue", p.due || "");
-  dpDisable("uDue", !S.canEdit);
-  $("uDueNote").textContent = S.canEdit ? "เจ้าหน้าที่จะเห็นจำนวนวันที่เหลือบนการ์ดและในหน้าโครงการรวม" : "หัวหน้าเป็นผู้กำหนดวันส่งมอบ";
+  dpDisable("uDue", false);
+  $("uDueNote").textContent = "จำนวนวันที่เหลือจะแสดงบนการ์ดและในหน้าโครงการรวม";
   fillSelect($("uOwner"), staffList(), "— เลือก —"); $("uOwner").value = p.owner || "";
   $("uBudget").value = p.budget ? baht(p.budget) : "";
   fillSelect($("uMethod"), methodList(p.method), "— ยังไม่ระบุ —"); $("uMethod").value = p.method || "";
@@ -855,7 +1113,7 @@ $("upd").addEventListener("submit", async e => {
   e.preventDefault();
   const p = S.projects.find(x => x.id === S.editing); if (!p || !S.db) return;
   const data = { stage: (document.querySelector('input[name="uStage"]:checked') || {}).value || "",
-    status: $("uStatus").value.trim(), due: S.canEdit ? ($("uDue").value || "") : (p.due || ""),
+    status: $("uStatus").value.trim(), due: $("uDue").value || "",
     owner: $("uOwner").value || p.owner, budget: parseBaht($("uBudget").value), method: $("uMethod").value || "",
     updatedAt: Date.now(), updatedBy: S.me || "" };
   if (Number.isNaN(data.budget)) { $("uErr").textContent = "วงเงินต้องเป็นตัวเลข เช่น 1,250,000"; return; }
@@ -869,10 +1127,11 @@ $("upd").addEventListener("submit", async e => {
   finally { $("uSave").disabled = false; }
 });
 
+$("addTopBtn").onclick = () => $("addBtn").onclick();
 $("addBtn").onclick = () => {
   fillSelect($("aType"), typeList(), "— เลือกประเภท —"); fillSelect($("aOwner"), staffList(), "— เลือก —");
   $("aOwner").value = S.staff || ""; $("aName").value = ""; $("aStatus").value = ""; $("aStage-plan").checked = true; $("aErr").textContent = "";
-  dpSet("aDue", ""); $("aDueField").hidden = !S.canEdit;
+  dpSet("aDue", ""); $("aDueField").hidden = false;
   $("aBudget").value = ""; fillSelect($("aMethod"), methodList(), "— ยังไม่ระบุ —");
   openDrawer("add"); $("aName").focus();
 };
@@ -884,7 +1143,7 @@ $("add").addEventListener("submit", async e => {
   if (Number.isNaN(parseBaht($("aBudget").value))) { $("aErr").textContent = "วงเงินต้องเป็นตัวเลข เช่น 1,250,000"; return; }
   const now = Date.now();
   const data = { title, type: $("aType").value, owner: $("aOwner").value, status: $("aStatus").value.trim(),
-    stage: (document.querySelector('input[name="aStage"]:checked') || {}).value || "plan", due: S.canEdit ? ($("aDue").value || "") : "", budget: parseBaht($("aBudget").value), method: $("aMethod").value || "",
+    stage: (document.querySelector('input[name="aStage"]:checked') || {}).value || "plan", due: $("aDue").value || "", budget: parseBaht($("aBudget").value), method: $("aMethod").value || "",
     order: Math.max(0, ...S.projects.map(p => p.order || 0)) + 1, createdAt: now, updatedAt: now, updatedBy: S.me || "", source: "app" };
   $("aSave").disabled = true;
   try {
@@ -1015,11 +1274,18 @@ async function start() {
   S.db = db; S.user = user;
   if (!db) { S.loaded = true; note("เชื่อมต่อ Apps Script ไม่ได้ ตรวจ URL ในไฟล์ index.html"); render(); return; }
   try { S.me = user ? await user.id() : null; } catch {}
+  try { if (user && ((await user.isOwner()) || (await user.canEdit()))) { S.canEdit = true; $("exportWordBtn").hidden = false; } } catch {}
   try {  // GitHub version: open the staff page on the signed-in person's own name
     const mine = user && user.staffName ? await user.staffName() : "";
-    if (mine && mine !== "ผู้ดูแลระบบ" && mine !== "รหัสส่วนกลาง") { S.staff = mine; try { localStorage.setItem("bsk-staff", mine); } catch {} }
+    if (mine) {
+      $("meCard").hidden = false; $("meName").textContent = mine; $("meAv").textContent = [...mine][0] || "?";
+      $("meRole").textContent = S.canEdit ? "หัวหน้า" : "เจ้าหน้าที่";
+    }
+    if (mine && mine !== "ผู้ดูแลระบบ" && mine !== "รหัสส่วนกลาง") {
+      S.myName = mine; S.staff = mine; try { localStorage.setItem("bsk-staff", mine); } catch {}
+      $("navMine").hidden = false; $("tabMine").hidden = false; route();
+    }
   } catch {}
-  try { if (user && ((await user.isOwner()) || (await user.canEdit()))) { S.canEdit = true; $("exportWordBtn").hidden = false; } } catch {}
   try { if (user && (await user.can("data.write")) === false) note("คุณดูได้อย่างเดียว ถ้าต้องการอัปเดตงาน ขอสิทธิ์ Contributor จากเจ้าของระบบ"); } catch {}
   const timer = setTimeout(() => { if (!S.loaded) { S.loaded = true; note("โหลดข้อมูลช้ากว่าปกติ ข้อมูลจะขึ้นเองเมื่อเชื่อมต่อได้"); render(); } }, 10000);
   db.doc("meta/ref").onSnapshot(d => { if (d.exists) { S.ref = d.data(); render(); } }, () => {});
