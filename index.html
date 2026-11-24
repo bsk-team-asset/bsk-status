@@ -418,6 +418,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 .kvg span { font-size: .75rem; color: var(--muted); display: block; }
 .kvg b { font-weight: 600; font-variant-numeric: tabular-nums; }
 .kvg small { color: var(--muted); }
+.kvg small.saved, dd .saved { color: var(--accent); } .kvg small.over, dd .over { color: var(--issue); }
 .pstatus { background: var(--glass-strong); border-radius: 14px; padding: 12px 14px; border-left: 3px solid var(--accent); white-space: pre-line; overflow-wrap: anywhere; }
 .pane-actions { display: flex; gap: 10px; }
 .split { gap: 18px; }
@@ -451,16 +452,19 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 
 /* PDF pages are laid out off screen, then captured */
 .pdfhost { position: fixed; left: -12000px; top: 0; z-index: -1; pointer-events: none; }
-.pdfpage { position: relative; width: 794px; height: 1123px; background: #fff; color: #000; overflow: hidden; margin-bottom: 20px;
+.pdfpage { position: relative; width: 1123px; height: 794px; background: #fff; color: #000; overflow: hidden; margin-bottom: 20px;
   font-family: "PDF Sarabun", "TH SarabunPSK", "Sarabun", sans-serif; font-size: 21px; line-height: 1.2; }
 .pdfnum { position: absolute; top: 38px; left: 0; right: 0; text-align: center; font-size: 21px; }
-.pdftbl { position: absolute; top: 76px; left: 61px; width: 671px; border-collapse: collapse; table-layout: fixed; }
+.pdftbl { position: absolute; top: 76px; left: 67px; width: 993px; border-collapse: collapse; table-layout: fixed; }
 .pdftbl { font-size: 21.33px; line-height: 1.2; }  /* body 16 pt, headings 17 pt, as in the Word form */
 .pdftbl th, .pdftbl td { border: 1px solid #000; padding: 1px 6px 2px; vertical-align: top; overflow-wrap: anywhere; color: #000; background: #fff;
   font-size: 21.33px; letter-spacing: 0; white-space: normal; font-family: "PDF Sarabun", "TH SarabunPSK", "Sarabun", sans-serif; }
 .pdftbl th { background: #b4c6e7; font-weight: 700; text-align: center; font-size: 22.7px; }
 .pdftbl tr.grp td { background: #b4c6e7; font-weight: 700; font-size: 22.7px; }
 .pdftbl td.c { text-align: center; }
+.pdftbl td.r { text-align: right; white-space: nowrap; }
+.pdftbl td.pc small { display: block; font-size: 18px; }
+.pdftbl tr.tot td { font-weight: 700; }
 .pdftbl td.own { background: #fff2cb; text-align: center; font-weight: 700; }
 </style>
 
@@ -505,7 +509,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
         <select id="fOwner" aria-label="ผู้รับผิดชอบ"></select>
         <select id="fMethod" aria-label="วิธีการ"></select>
         <select id="fFund" aria-label="แหล่งเงิน"></select>
-        <select id="fSort" aria-label="เรียงลำดับ"><option value="">เรียงตามอัปเดตล่าสุด</option><option value="due">เรียงตามวันส่งมอบที่ใกล้ที่สุด</option><option value="budget">เรียงตามวงเงินมากไปน้อย</option><option value="order">เรียงตามลำดับในชีต</option></select>
+        <select id="fSort" aria-label="เรียงลำดับ"><option value="">เรียงตามอัปเดตล่าสุด</option><option value="due">เรียงตามวันส่งมอบที่ใกล้ที่สุด</option><option value="budget">เรียงตามวงเงินงบประมาณมากไปน้อย</option><option value="order">เรียงตามลำดับในชีต</option></select>
         <span class="count" id="count"></span>
       </div>
       <div class="splitview">
@@ -567,9 +571,10 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
   <div class="field"><span>กำหนดวันส่งมอบ</span><input type="hidden" id="uDue">
     <small id="uDueNote"></small></div>
   <div class="pair2">
-    <label class="field"><span>วงเงิน (บาท)</span><input type="text" id="uBudget" inputmode="decimal" placeholder="เช่น 1,250,000"></label>
-    <label class="field"><span>วิธีการ</span><select id="uMethod"></select></label>
+    <label class="field"><span>วงเงินงบประมาณ (บาท)</span><input type="text" id="uBudget" inputmode="decimal" placeholder="เช่น 1,250,000"></label>
+    <label class="field"><span>วงเงินที่จัดซื้อ/จ้าง (บาท)</span><input type="text" id="uAwarded" inputmode="decimal" placeholder="เช่น 1,190,000"></label>
   </div>
+  <label class="field"><span>วิธีการ</span><select id="uMethod"></select></label>
   <label class="field"><span>แหล่งเงิน</span><select id="uFund"><option value="">— ยังไม่ระบุ —</option><option value="เงินงบประมาณ">เงินงบประมาณ</option><option value="เงินนอกงบประมาณ">เงินนอกงบประมาณ</option></select></label>
   <label class="field"><span>ผู้รับผิดชอบ</span><select id="uOwner"></select></label>
   <p class="err" id="uErr" role="alert"></p>
@@ -583,9 +588,10 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
   <label class="field"><span>ผู้รับผิดชอบ</span><select id="aOwner"></select></label>
   <div class="field"><span>ขั้นตอน</span><div class="opts" id="aStages"></div></div>
   <div class="pair2">
-    <label class="field"><span>วงเงิน (บาท)</span><input type="text" id="aBudget" inputmode="decimal" placeholder="เช่น 1,250,000"></label>
-    <label class="field"><span>วิธีการ</span><select id="aMethod"></select></label>
+    <label class="field"><span>วงเงินงบประมาณ (บาท)</span><input type="text" id="aBudget" inputmode="decimal" placeholder="เช่น 1,250,000"></label>
+    <label class="field"><span>วงเงินที่จัดซื้อ/จ้าง (บาท)</span><input type="text" id="aAwarded" inputmode="decimal" placeholder="เช่น 1,190,000"></label>
   </div>
+  <label class="field"><span>วิธีการ</span><select id="aMethod"></select></label>
   <label class="field"><span>แหล่งเงิน</span><select id="aFund"><option value="">— ยังไม่ระบุ —</option><option value="เงินงบประมาณ">เงินงบประมาณ</option><option value="เงินนอกงบประมาณ">เงินนอกงบประมาณ</option></select></label>
   <div class="field" id="aDueField"><span>กำหนดวันส่งมอบ</span><input type="hidden" id="aDue"></div>
   <label class="field"><span>สถานะล่าสุด</span><textarea id="aStatus" maxlength="600" placeholder="เช่น ขออนุมัติงบประมาณ"></textarea></label>
@@ -928,7 +934,7 @@ function renderOverview() {
   $("fType").value = S.type; $("fOwner").value = S.owner;
   const rows = filtered();
   const sum = rows.reduce((t, p) => t + (Number(p.budget) || 0), 0), withB = rows.filter(p => Number(p.budget) > 0).length;
-  $("count").textContent = `แสดง ${rows.length} จาก ${P.length} โครงการ | วงเงินรวม ${baht(sum)} บาท` + (withB < rows.length ? ` (ระบุแล้ว ${withB} โครงการ)` : "");
+  $("count").textContent = `แสดง ${rows.length} จาก ${P.length} โครงการ | วงเงินงบประมาณรวม ${baht(sum)} บาท` + (withB < rows.length ? ` (ระบุแล้ว ${withB} โครงการ)` : "");
   renderKpis(P);
   const tb = $("tbody"); tb.replaceChildren();
   if (!rows.length) {
@@ -952,12 +958,13 @@ function renderKpis(P) {
   const total = P.length, contract = P.filter(p => p.stage === "contract").length, alert = P.filter(isDueAlert).length;
   const week = P.filter(p => p.updatedAt && Date.now() - p.updatedAt < 7 * 864e5).length;
   const withB = P.filter(p => Number(p.budget) > 0), sum = withB.reduce((t, p) => t + Number(p.budget), 0);
-  const money = sum >= 1e6 ? `${(sum / 1e6).toLocaleString("th-TH", { maximumFractionDigits: 1 })} ล้าน` : baht(sum);
+  const short = v => v >= 1e6 ? `${(v / 1e6).toLocaleString("th-TH", { maximumFractionDigits: 1 })} ล้าน` : baht(v);
+  const money = short(sum), awSum = P.reduce((t, p) => t + (Number(p.awarded) || 0), 0);
   $("kpis").innerHTML = `
     <div class="kpi glass"><span>โครงการทั้งหมด</span><b>${total}</b><small>อัปเดตใน 7 วัน ${week} โครงการ</small></div>
     <div class="kpi glass"><span>ลงนาม / บริหารสัญญา</span><b>${contract}</b><small>${total ? Math.round(contract / total * 100) : 0}% ของทั้งหมด</small></div>
     <button type="button" class="kpi glass alert" id="kpiDue" aria-pressed="${S.stage === "due"}"><span>เกิน / ครบกำหนดใน 7 วัน</span><b>${alert}</b><small>${alert ? "กดเพื่อดูรายการ" : "ไม่มีงานเร่ง"}</small></button>
-    <div class="kpi glass"><span>วงเงินรวม (บาท)</span><b>${money}</b><small>ระบุแล้ว ${withB.length} จาก ${total} โครงการ</small></div>`;
+    <div class="kpi glass"><span>วงเงินงบประมาณรวม (บาท)</span><b>${money}</b><small>${awSum ? `จัดซื้อ/จ้างแล้ว ${short(awSum)} บาท` : `ระบุแล้ว ${withB.length} จาก ${total} โครงการ`}</small></div>`;
   $("kpiDue").onclick = () => { S.stage = S.stage === "due" ? null : "due"; render(); };
   const seg = STAGES.map(s => [s.key, P.filter(p => p.stage === s.key).length]);
   const other = total - seg.reduce((t, x) => t + x[1], 0);
@@ -967,10 +974,17 @@ function renderKpis(P) {
   if (S.myName) { const m = P.filter(p => p.owner === S.myName).length; $("cntMine").textContent = m; }
 }
 let paneKey = "";
+function savedNote(p) {
+  const b = Number(p.budget) || 0, a = Number(p.awarded) || 0;
+  if (!b || !a) return "";
+  const d = b - a;
+  return d > 0 ? `<small class="saved"> ประหยัด ${baht(d)} บาท (${(d / b * 100).toLocaleString("th-TH", { maximumFractionDigits: 1 })}%)</small>`
+    : d < 0 ? `<small class="over"> เกินงบ ${baht(-d)} บาท</small>` : "";
+}
 async function renderPane(p) {
   const pane = $("pane");
   if (!p) { paneKey = ""; pane.innerHTML = `<div class="pane-empty">เลือกโครงการจากรายการเพื่อดูรายละเอียด</div>`; return; }
-  const key = p.id + "|" + (p.updatedAt || 0) + "|" + (p.owner || "") + "|" + (p.due || "");
+  const key = p.id + "|" + (p.updatedAt || 0) + "|" + (p.awarded || 0) + "|" + (p.budget || 0) + "|" + (p.owner || "") + "|" + (p.due || "");
   if (key === paneKey) return;
   paneKey = key;
   const si = SI[p.stage] ?? -1;
@@ -978,7 +992,8 @@ async function renderPane(p) {
     <div><div class="tag">${esc(p.type)}${p.method ? " | " + esc(p.method) : ""}${p.fund ? ` | <span class="fund">${esc(p.fund)}</span>` : ""}</div><h2>${esc(p.title)}</h2></div>
     <div class="stepper">${STAGES.map((st, i) => `<div class="${i <= si ? "on" : ""}${i === si ? " cur" : ""}"><i></i>${esc(st.label.split(" / ")[0])}</div>`).join("")}</div>
     <div class="kvg">
-      <div><span>วงเงิน${p.fund ? " (" + esc(p.fund) + ")" : ""}</span><b>${p.budget ? baht(p.budget) + " บาท" : "—"}</b></div>
+      <div><span>วงเงินงบประมาณ${p.fund ? " (" + esc(p.fund) + ")" : ""}</span><b>${p.budget ? baht(p.budget) + " บาท" : "—"}</b></div>
+      <div><span>วงเงินที่จัดซื้อ/จ้าง</span><b>${p.awarded ? baht(p.awarded) + " บาท" : "—"}</b>${savedNote(p)}</div>
       <div><span>วันส่งมอบ</span><b>${p.due ? thDate(p.due) : "ยังไม่กำหนด"}</b> ${p.due ? dueBadge(p) : ""}</div>
       <div><span>ผู้รับผิดชอบ</span><b>${esc(p.owner || "—")}</b></div>
       <div><span>อัปเดตล่าสุด</span><b>${when(p.updatedAt)}</b>${p.updatedByName ? `<small> โดย ${esc(p.updatedByName)}</small>` : ""}</div>
@@ -1037,7 +1052,7 @@ function renderStaff() {
     const si = SI[p.stage] ?? -1, s = stageOf(p);
     const c = document.createElement("article"); c.className = "card"; c.style.cssText = stageVars(s.key);
     c.innerHTML = `<div class="type">${esc(p.type)}</div><h3>${esc(p.title)}</h3>
-      <div class="money-row"><span>วงเงิน <b>${p.budget ? baht(p.budget) + " บาท" : "—"}</b></span><span>วิธีการ <b>${esc(p.method) || "—"}</b></span></div>
+      <div class="money-row"><span>งบประมาณ <b>${p.budget ? baht(p.budget) + " บาท" : "—"}</b></span><span>จัดซื้อ/จ้าง <b>${p.awarded ? baht(p.awarded) + " บาท" : "—"}</b></span><span>วิธีการ <b>${esc(p.method) || "—"}</b></span></div>
       <div><div class="steps" aria-label="ขั้นตอนที่ ${si + 1} จาก 5">${STAGES.map((_, i) => `<i class="${i <= si ? "on" : ""}"></i>`).join("")}</div>
       <div class="steps-l"><span>${esc(s.label)}</span></div></div>
       <div class="st">${esc(p.status) || '<span class="muted">ยังไม่มีสถานะ</span>'}</div>
@@ -1103,7 +1118,7 @@ async function openDetail(id) {
   const s = stageOf(p);
   $("dStage").style.cssText = stageVars(s.key); $("dStage").textContent = s.label;
   $("dTitle").textContent = p.title;
-  $("dKv").innerHTML = `<dt>ประเภท</dt><dd>${esc(p.type)}</dd><dt>วงเงิน</dt><dd>${p.budget ? baht(p.budget) + " บาท" : "—"}</dd><dt>วิธีการ</dt><dd>${esc(p.method) || "—"}</dd><dt>แหล่งเงิน</dt><dd>${esc(p.fund) || "—"}</dd><dt>ผู้รับผิดชอบ</dt><dd>${esc(p.owner)}</dd>
+  $("dKv").innerHTML = `<dt>ประเภท</dt><dd>${esc(p.type)}</dd><dt>วงเงินงบประมาณ</dt><dd>${p.budget ? baht(p.budget) + " บาท" : "—"}</dd><dt>วงเงินที่จัดซื้อ/จ้าง</dt><dd>${p.awarded ? baht(p.awarded) + " บาท" : "—"}${savedNote(p)}</dd><dt>วิธีการ</dt><dd>${esc(p.method) || "—"}</dd><dt>แหล่งเงิน</dt><dd>${esc(p.fund) || "—"}</dd><dt>ผู้รับผิดชอบ</dt><dd>${esc(p.owner)}</dd>
     <dt>สถานะล่าสุด</dt><dd>${esc(p.status) || "—"}</dd>
     <dt>วันส่งมอบ</dt><dd>${p.due ? `${thDate(p.due)} ${dueBadge(p)}` : '<span class="muted">ยังไม่กำหนด</span>'}</dd><dt>อัปเดต</dt><dd>${when(p.updatedAt)}${p.updatedByName ? ` โดย ${esc(p.updatedByName)}` : ""}</dd>`;
   $("dUpdate").disabled = !S.db;
@@ -1130,7 +1145,7 @@ function openUpdate(id) {
   dpDisable("uDue", false);
   $("uDueNote").textContent = "จำนวนวันที่เหลือจะแสดงบนการ์ดและในหน้าโครงการรวม";
   fillSelect($("uOwner"), staffList(), "— เลือก —"); $("uOwner").value = p.owner || "";
-  $("uBudget").value = p.budget ? baht(p.budget) : "";
+  $("uBudget").value = p.budget ? baht(p.budget) : ""; $("uAwarded").value = p.awarded ? baht(p.awarded) : "";
   fillSelect($("uMethod"), methodList(p.method), "— ยังไม่ระบุ —"); $("uMethod").value = p.method || ""; $("uFund").value = p.fund || "";
   $("uErr").textContent = "";
   openDrawer("upd"); $("uStatus").focus();
@@ -1140,9 +1155,9 @@ $("upd").addEventListener("submit", async e => {
   const p = S.projects.find(x => x.id === S.editing); if (!p || !S.db) return;
   const data = { stage: (document.querySelector('input[name="uStage"]:checked') || {}).value || "",
     status: $("uStatus").value.trim(), due: $("uDue").value || "",
-    owner: $("uOwner").value || p.owner, budget: parseBaht($("uBudget").value), method: $("uMethod").value || "", fund: $("uFund").value || "",
+    owner: $("uOwner").value || p.owner, budget: parseBaht($("uBudget").value), awarded: parseBaht($("uAwarded").value), method: $("uMethod").value || "", fund: $("uFund").value || "",
     updatedAt: Date.now(), updatedBy: S.me || "" };
-  if (Number.isNaN(data.budget)) { $("uErr").textContent = "วงเงินต้องเป็นตัวเลข เช่น 1,250,000"; return; }
+  if (Number.isNaN(data.budget) || Number.isNaN(data.awarded)) { $("uErr").textContent = "วงเงินต้องเป็นตัวเลข เช่น 1,250,000"; return; }
   if (!data.status) { $("uErr").textContent = "กรุณากรอกสถานะล่าสุด"; return; }
   $("uSave").disabled = true; $("uErr").textContent = "";
   try {
@@ -1158,7 +1173,7 @@ $("addBtn").onclick = () => {
   fillSelect($("aType"), typeList(), "— เลือกประเภท —"); fillSelect($("aOwner"), staffList(), "— เลือก —");
   $("aOwner").value = S.staff || ""; $("aName").value = ""; $("aStatus").value = ""; $("aStage-plan").checked = true; $("aErr").textContent = "";
   dpSet("aDue", ""); $("aDueField").hidden = false;
-  $("aBudget").value = ""; fillSelect($("aMethod"), methodList(), "— ยังไม่ระบุ —"); $("aFund").value = "";
+  $("aBudget").value = ""; $("aAwarded").value = ""; fillSelect($("aMethod"), methodList(), "— ยังไม่ระบุ —"); $("aFund").value = "";
   openDrawer("add"); $("aName").focus();
 };
 $("add").addEventListener("submit", async e => {
@@ -1166,10 +1181,10 @@ $("add").addEventListener("submit", async e => {
   const title = $("aName").value.trim().replace(/\s+/g, " ");
   if (!title) { $("aErr").textContent = "กรุณากรอกชื่อโครงการ"; return; }
   if (!$("aType").value || !$("aOwner").value) { $("aErr").textContent = "กรุณาเลือกประเภทและผู้รับผิดชอบ"; return; }
-  if (Number.isNaN(parseBaht($("aBudget").value))) { $("aErr").textContent = "วงเงินต้องเป็นตัวเลข เช่น 1,250,000"; return; }
+  if (Number.isNaN(parseBaht($("aBudget").value)) || Number.isNaN(parseBaht($("aAwarded").value))) { $("aErr").textContent = "วงเงินต้องเป็นตัวเลข เช่น 1,250,000"; return; }
   const now = Date.now();
   const data = { title, type: $("aType").value, owner: $("aOwner").value, status: $("aStatus").value.trim(),
-    stage: (document.querySelector('input[name="aStage"]:checked') || {}).value || "plan", due: $("aDue").value || "", budget: parseBaht($("aBudget").value), method: $("aMethod").value || "", fund: $("aFund").value || "",
+    stage: (document.querySelector('input[name="aStage"]:checked') || {}).value || "plan", due: $("aDue").value || "", budget: parseBaht($("aBudget").value), awarded: parseBaht($("aAwarded").value), method: $("aMethod").value || "", fund: $("aFund").value || "",
     order: Math.max(0, ...S.projects.map(p => p.order || 0)) + 1, createdAt: now, updatedAt: now, updatedBy: S.me || "", source: "app" };
   $("aSave").disabled = true;
   try {
@@ -1292,6 +1307,9 @@ function loadJSZip() {
   return new Promise((res, rej) => { const sc = document.createElement("script");
     sc.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"; sc.onload = res; sc.onerror = () => rej(new Error("jszip")); document.head.append(sc); });
 }
+function progressPct(p) { const i = SI[p.stage]; return i == null ? null : (i + 1) * 20; }
+function progressLines(p) { const v = progressPct(p); return v == null ? ["-"] : [v + "%", STAGES[SI[p.stage]].label.split(" / ")[0]]; }
+const fmtMoney = v => Number(v) > 0 ? baht(v) : "-";
 function fillWordForm(doc, projects) {
   const t0 = doc.search(/<w:tbl[ >]/), t1 = doc.indexOf("</w:tbl>");
   const tbl = doc.slice(t0, t1);
@@ -1319,12 +1337,18 @@ function fillWordForm(doc, projects) {
     rows.push(groupTpl.replace(/(<w:t>)[^<]*(<\/w:t>)/, (m, a, b) => a + x(type) + b));
     items.forEach((p, i) => {
       const status = String(p.status || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-      const vals = [[String(i + 1), false], [[p.title], true], [[p.fund || "-"], false], [status.length ? status : ["-"], false], [[p.owner || "-"], false]];
+      const vals = [[String(i + 1), false], [[p.title], true], [[p.fund || "-"], false], [[fmtMoney(p.budget)], false], [[fmtMoney(p.awarded)], false],
+        [progressLines(p), false], [status.length ? status : ["-"], false], [[p.owner || "-"], false]];
       let row = dataTpl;
       tcs.forEach((tc, k) => { const [v, plain] = vals[k]; row = row.replace(tc, () => fillCell(tc, Array.isArray(v) ? v : [v], plain)); });
       rows.push(row);
     });
   }
+  const sumB = projects.reduce((t, p) => t + (Number(p.budget) || 0), 0), sumA = projects.reduce((t, p) => t + (Number(p.awarded) || 0), 0);
+  const totals = [["", false], [["รวมทั้งสิ้น " + projects.length + " โครงการ"], false], ["", false], [[fmtMoney(sumB)], false], [[fmtMoney(sumA)], false], ["", false], ["", false], ["", false]];
+  let trow = dataTpl;
+  tcs.forEach((tc, k) => { const [v, plain] = totals[k]; trow = trow.replace(tc, () => fillCell(tc, Array.isArray(v) ? v : [v], plain).replace(/<w:b\/>|<w:bCs\/>/g, "").replace(/(<w:rFonts[^>]*\/>)/g, "$1<w:b/><w:bCs/>")); });
+  rows.push(trow);
   return doc.slice(0, t0) + before + rows.join("") + doc.slice(t1);
 }
 $("exportWordBtn").onclick = async () => {
@@ -1367,12 +1391,12 @@ function formGroups(projects) {
   projects.forEach(p => { if (p.type && !order.includes(p.type)) order.push(p.type); });
   return order.map(type => ({ type, items: projects.filter(p => p.type === type).sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9)) })).filter(g => g.items.length);
 }
-// px at 96 dpi: A4 = 794 x 1123; margins and widths follow the Word form (twips / 15)
-const PDF = { W: 794, H: 1123, top: 76, bottom: 96, numTop: 38, cols: [61, 200, 130, 180, 100] };
+// px at 96 dpi: A4 landscape = 1123 x 794; margins and widths follow the Word form (twips / 15)
+const PDF = { W: 1123, H: 794, top: 76, bottom: 96, numTop: 38, cols: [53, 247, 100, 113, 113, 87, 180, 100] };
 function pdfPage(n) {
   const page = document.createElement("div"); page.className = "pdfpage";
   page.innerHTML = `<div class="pdfnum">- ${n} -</div><table class="pdftbl"><colgroup>${PDF.cols.map(w => `<col style="width:${w}px">`).join("")}</colgroup>
-    <thead><tr><th>ลำดับ</th><th>รายการ</th><th>แหล่งเงิน</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th></tr></thead><tbody></tbody></table>`;
+    <thead><tr><th>ลำดับ</th><th>รายการ</th><th>แหล่งเงิน</th><th>วงเงินงบประมาณ (บาท)</th><th>วงเงินที่จัดซื้อ/จ้าง (บาท)</th><th>ความคืบหน้า</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th></tr></thead><tbody></tbody></table>`;
   return page;
 }
 async function buildPdfPages(projects, host) {
@@ -1390,14 +1414,17 @@ async function buildPdfPages(projects, host) {
     body = page.querySelector("tbody"); if (carry) body.append(carry); body.append(tr);
   };
   for (const g of formGroups(projects)) {
-    const gr = document.createElement("tr"); gr.className = "grp"; gr.innerHTML = `<td colspan="5">${esc(g.type)}</td>`; add(gr);
+    const gr = document.createElement("tr"); gr.className = "grp"; gr.innerHTML = `<td colspan="8">${esc(g.type)}</td>`; add(gr);
     g.items.forEach((p, i) => {
       const lines = String(p.status || "").split(/\r?\n/).map(t => t.trim()).filter(Boolean);
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td class="c">${i + 1}</td><td>${esc(p.title)}</td><td class="c">${esc(p.fund || "-")}</td><td>${(lines.length ? lines : ["-"]).map(esc).join("<br>")}</td><td class="own">${esc(p.owner || "-")}</td>`;
+      tr.innerHTML = `<td class="c">${i + 1}</td><td>${esc(p.title)}</td><td class="c">${esc(p.fund || "-")}</td><td class="r">${fmtMoney(p.budget)}</td><td class="r">${fmtMoney(p.awarded)}</td><td class="c pc">${progressLines(p).map((t, k) => k ? `<small>${esc(t)}</small>` : esc(t)).join("")}</td><td>${(lines.length ? lines : ["-"]).map(esc).join("<br>")}</td><td class="own">${esc(p.owner || "-")}</td>`;
       add(tr);
     });
   }
+  const tot = document.createElement("tr"); tot.className = "tot";
+  tot.innerHTML = `<td></td><td>รวมทั้งสิ้น ${projects.length} โครงการ</td><td></td><td class="r">${fmtMoney(projects.reduce((t, p) => t + (Number(p.budget) || 0), 0))}</td><td class="r">${fmtMoney(projects.reduce((t, p) => t + (Number(p.awarded) || 0), 0))}</td><td></td><td></td><td></td>`;
+  add(tot);
   return pages;
 }
 $("exportPdfBtn").onclick = async () => {
@@ -1413,12 +1440,12 @@ $("exportPdfBtn").onclick = async () => {
     ]);
     await Promise.all([document.fonts.load('400 21px "PDF Sarabun"', "ก"), document.fonts.load('700 21px "PDF Sarabun"', "ก")]);
     const pages = await buildPdfPages(filtered(), host);
-    const pdf = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "portrait", compress: true });
+    const pdf = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "landscape", compress: true });
     for (let i = 0; i < pages.length; i++) {
       btn.textContent = `กำลังสร้าง PDF… ${i + 1}/${pages.length}`;
       const canvas = await html2canvas(pages[i], { scale: 2, backgroundColor: "#ffffff", logging: false, width: PDF.W, height: PDF.H, windowWidth: PDF.W });
-      if (i) pdf.addPage("a4", "portrait");
-      pdf.addImage(canvas.toDataURL("image/jpeg", 0.9), "JPEG", 0, 0, 210, 297);
+      if (i) pdf.addPage("a4", "landscape");
+      pdf.addImage(canvas.toDataURL("image/jpeg", 0.9), "JPEG", 0, 0, 297, 210);
     }
     const d = new Date().toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
     await dl.save({ filename: `สถานะงาน บสก. ${d}.pdf`, data: pdf.output("blob") });
