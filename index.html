@@ -421,7 +421,11 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 .kvg small { color: var(--muted); }
 .kvg small.saved, dd .saved { color: var(--accent); } .kvg small.over, dd .over { color: var(--issue); }
 .pstatus { background: var(--glass-strong); border-radius: 14px; padding: 12px 14px; border-left: 3px solid var(--accent); white-space: pre-line; overflow-wrap: anywhere; }
-.pane-actions { display: flex; gap: 10px; }
+.pane-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn.danger { background: transparent; color: var(--issue); border: 1px solid var(--issue); box-shadow: none; }
+.btn.danger:hover { background: var(--issue-bg); filter: none; }
+.btn.danger.armed { background: var(--issue); color: #fff; }
+.pinlist button.rm-staff { color: var(--issue); }
 .split { gap: 18px; }
 .side { border-radius: 20px; padding: 12px 10px; }
 .card { border-radius: 20px; padding: 16px 18px; border-top: 1px solid var(--glass-line); }
@@ -527,7 +531,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
         <ul class="slist" id="staffPick"></ul>
         <label class="smobile"><span class="side-h">เลือกชื่อของคุณ</span><select id="staffSel"></select></label>
         <button class="btn ghost sm addstaff" id="addStaffBtn" type="button" hidden>+ เพิ่มเจ้าหน้าที่</button>
-        <button class="btn ghost sm addstaff" id="pinsBtn" type="button" hidden>จัดการรหัสเจ้าหน้าที่</button>
+        <button class="btn ghost sm addstaff" id="pinsBtn" type="button" hidden>จัดการเจ้าหน้าที่ / รหัส</button>
       </aside>
       <div style="display:grid;gap:14px;align-content:start;min-width:0">
         <div class="bar">
@@ -556,7 +560,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
   <div class="bar"><span class="pill" id="dStage"></span><button class="btn ghost sm" type="button" data-close>ปิด</button></div>
   <h2 id="dTitle"></h2>
   <dl class="kv" id="dKv"></dl>
-  <div class="actions" style="margin-top:0"><button class="btn sm" id="dUpdate" type="button">อัปเดตสถานะ</button></div>
+  <div class="actions" style="margin-top:0"><button class="btn sm" id="dUpdate" type="button">อัปเดตสถานะ</button><button class="btn sm danger" id="dDelete" type="button" hidden>ลบโครงการ</button></div>
   <h3 style="margin:8px 0 0;font-size:0.95rem">ประวัติการอัปเดต</h3>
   <ul class="log" id="dLog"></ul>
 </aside>
@@ -623,7 +627,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 </form>
 
 <form class="drawer" id="pins" hidden aria-labelledby="pTitle">
-  <h2 id="pTitle">รหัสเจ้าหน้าที่</h2>
+  <h2 id="pTitle">จัดการเจ้าหน้าที่</h2>
   <p class="muted" style="margin:0;font-size:0.88rem">แต่ละคนเข้าระบบด้วยรหัสของตัวเอง ทุกการแก้ไขจะบันทึกชื่อคนที่แก้ ระบบเก็บรหัสแบบเข้ารหัส ไม่มีใครเปิดดูรหัสเดิมได้ ถ้าลืมให้ตั้งใหม่</p>
   <label class="field"><span>เจ้าหน้าที่</span><select id="pName"></select></label>
   <div class="field"><span>รหัสใหม่ (อย่างน้อย 6 ตัว)</span>
@@ -634,7 +638,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
   <p class="err" id="pErr" role="alert"></p>
   <div class="pinok" id="pOk" hidden></div>
   <div class="actions" style="margin-top:0"><button class="btn" type="submit" id="pSave">บันทึกรหัส</button></div>
-  <div class="field"><span>สถานะรหัส</span><ul class="pinlist" id="pList"><li class="muted">กำลังโหลด…</li></ul></div>
+  <div class="field"><span>รายชื่อเจ้าหน้าที่</span><small>ลบเจ้าหน้าที่ได้เมื่อไม่มีโครงการค้างอยู่ ถ้ามี ให้กด “โอนงาน” ในหน้าเจ้าหน้าที่ก่อน</small><ul class="pinlist" id="pList"><li class="muted">กำลังโหลด…</li></ul></div>
   <div class="actions"><button class="btn ghost" type="button" data-close>ปิด</button></div>
 </form>
 
@@ -776,12 +780,14 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzOxQmm1DNmWkk05eGNZ92K
     return { async update(data) { await call("update", { id: m[1], fields: data }); await refresh(); } };
   }
   async function transfer(req) { await call("transfer", req); await refresh(); }
+  async function deleteProject(id) { await call("deleteProject", { id }); await refresh(); }
   const admin = {
     async list() { return (await call("users")).users; },
     async setPin(name, newPin, isAdmin) { await call("setPin", { name, newPin, admin: isAdmin }); },
     async removePin(name) { await call("removePin", { name }); },
+    async removeStaff(name) { await call("removeStaff", { name }); await refresh(); },
   };
-  const db = { collection, doc, transfer, admin };
+  const db = { collection, doc, transfer, deleteProject, admin };
   const user = { staffName: async () => myName, id: async () => "web", isOwner: async () => role === "admin", canEdit: async () => role === "admin", can: async () => true };
   const downloads = { async save({ filename, data }) {
     const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data]));
@@ -1000,10 +1006,11 @@ async function renderPane(p) {
       <div><span>อัปเดตล่าสุด</span><b>${when(p.updatedAt)}</b>${p.updatedByName ? `<small> โดย ${esc(p.updatedByName)}</small>` : ""}</div>
     </div>
     <div class="pstatus">${esc(p.status) || '<span class="muted">ยังไม่มีสถานะ</span>'}</div>
-    <div class="pane-actions"><button class="btn" type="button" id="paneUpdate">อัปเดตสถานะ</button></div>
+    <div class="pane-actions"><button class="btn" type="button" id="paneUpdate">อัปเดตสถานะ</button>${S.db && S.db.deleteProject && S.canEdit ? `<button class="btn danger" type="button" id="paneDelete">ลบโครงการ</button>` : ""}</div>
     <div><h3>ประวัติการอัปเดต</h3><ul class="log" id="paneLog"><li class="muted">กำลังโหลดประวัติ…</li></ul></div>`;
   $("paneUpdate").disabled = !S.db;
   $("paneUpdate").onclick = () => openUpdate(p.id);
+  if ($("paneDelete")) armDelete($("paneDelete"), p);
   const log = $("paneLog");
   if (!S.db) { log.innerHTML = `<li class="muted">ต้องเข้าสู่ระบบเพื่อดูประวัติ</li>`; return; }
   try {
@@ -1014,6 +1021,24 @@ async function renderPane(p) {
       <div>${stagePill(x)}</div><div class="s">${esc(x.status)}</div></li>`).join("")
       : `<li class="muted">ยังไม่มีการอัปเดตผ่านระบบ</li>`;
   } catch { if (paneKey === key) log.innerHTML = `<li class="muted">โหลดประวัติไม่สำเร็จ</li>`; }
+}
+function armDelete(btn, p) {
+  btn.onclick = async () => {
+    if (!btn.classList.contains("armed")) {
+      btn.classList.add("armed"); btn.textContent = "กดอีกครั้งเพื่อยืนยันการลบ";
+      clearTimeout(btn.t); btn.t = setTimeout(() => { btn.classList.remove("armed"); btn.textContent = "ลบโครงการ"; }, 5000);
+      return;
+    }
+    clearTimeout(btn.t); btn.disabled = true; btn.textContent = "กำลังลบ…";
+    try {
+      await S.db.deleteProject(p.id);
+      if (S.sel === p.id) S.sel = null;
+      paneKey = ""; closeDrawers(); toast(`ลบโครงการ “${p.title.length > 40 ? p.title.slice(0, 40) + "…" : p.title}” แล้ว`);
+    } catch (err) {
+      btn.disabled = false; btn.classList.remove("armed"); btn.textContent = "ลบโครงการ";
+      toast(err && err.code === "bad_action" ? "ต้องอัปเดตโค้ด Apps Script เป็นเวอร์ชันใหม่ก่อน" : (err && err.msg) || "ลบไม่สำเร็จ ลองอีกครั้ง");
+    }
+  };
 }
 $("q").oninput = e => { S.q = e.target.value; renderOverview(); };
 $("fType").onchange = e => { S.type = e.target.value; renderOverview(); };
@@ -1123,6 +1148,8 @@ async function openDetail(id) {
     <dt>สถานะล่าสุด</dt><dd>${esc(p.status) || "—"}</dd>
     <dt>วันส่งมอบ</dt><dd>${p.due ? `${thDate(p.due)} ${dueBadge(p)}` : '<span class="muted">ยังไม่กำหนด</span>'}</dd><dt>อัปเดต</dt><dd>${when(p.updatedAt)}${p.updatedByName ? ` โดย ${esc(p.updatedByName)}` : ""}</dd>`;
   $("dUpdate").disabled = !S.db;
+  const del = $("dDelete"); del.hidden = !(S.db && S.db.deleteProject && S.canEdit);
+  del.disabled = false; del.classList.remove("armed"); del.textContent = "ลบโครงการ"; armDelete(del, p);
   const log = $("dLog"); log.innerHTML = `<li class="muted">กำลังโหลดประวัติ…</li>`;
   openDrawer("detail");
   if (!S.db) { log.innerHTML = `<li class="muted">ต้องเข้าสู่ระบบเพื่อดูประวัติ</li>`; return; }
@@ -1263,12 +1290,26 @@ async function loadPins() {
     pinUsers = await S.db.admin.list();
     list.innerHTML = pinUsers.map(u => `<li><span class="nm">${esc(u.name)}</span>${u.admin ? '<span class="hd">หัวหน้า</span>' : ""}
       <span class="${u.hasPin ? "st-ok" : "st-no"}">${u.hasPin ? "มีรหัสแล้ว" : "ยังไม่มีรหัส"}</span>
-      ${u.hasPin ? `<button type="button" data-rm="${esc(u.name)}">ลบรหัส</button>` : ""}</li>`).join("") || '<li class="muted">ยังไม่มีรายชื่อเจ้าหน้าที่</li>';
+      ${u.hasPin ? `<button type="button" data-rm="${esc(u.name)}">ลบรหัส</button>` : ""}
+      ${S.db.admin.removeStaff ? `<button type="button" class="rm-staff" data-rmstaff="${esc(u.name)}">ลบเจ้าหน้าที่</button>` : ""}</li>`).join("") || '<li class="muted">ยังไม่มีรายชื่อเจ้าหน้าที่</li>';
     list.querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => {
       if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "กดอีกครั้งเพื่อยืนยัน"; return; }
       b.disabled = true;
       try { await S.db.admin.removePin(b.dataset.rm); toast(`ลบรหัสของ ${b.dataset.rm} แล้ว`); await loadPins(); }
       catch (err) { $("pErr").textContent = (err && err.msg) || "ลบไม่สำเร็จ"; b.disabled = false; }
+    });
+    list.querySelectorAll("[data-rmstaff]").forEach(b => b.onclick = async () => {
+      const name = b.dataset.rmstaff, n = S.projects.filter(p => p.owner === name).length;
+      $("pErr").textContent = "";
+      if (n) { $("pErr").textContent = `${name} ยังมีโครงการที่รับผิดชอบ ${n} รายการ กรุณาโอนงานให้คนอื่นก่อนลบ`; return; }
+      if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "กดอีกครั้งเพื่อยืนยัน"; return; }
+      b.disabled = true;
+      try {
+        await S.db.admin.removeStaff(name);
+        if (S.staff === name) { S.staff = null; try { localStorage.removeItem("bsk-staff"); } catch {} }
+        toast(`ลบ ${name} ออกจากรายชื่อแล้ว`);
+        fillSelect($("pName"), staffList(), "— เลือกเจ้าหน้าที่ —"); await loadPins();
+      } catch (err) { $("pErr").textContent = err && err.code === "bad_action" ? "ต้องอัปเดตโค้ด Apps Script เป็นเวอร์ชันใหม่ก่อน" : (err && err.msg) || "ลบไม่สำเร็จ"; b.disabled = false; }
     });
     const u = pinUsers.find(x => x.name === $("pName").value); $("pAdmin").checked = !!(u && u.admin);
   } catch (err) { list.innerHTML = `<li class="err">${esc(err && err.code === "bad_action" ? "ต้องอัปเดตโค้ด Apps Script เป็นเวอร์ชันใหม่ก่อน" : (err && err.msg) || "โหลดไม่สำเร็จ")}</li>`; }
