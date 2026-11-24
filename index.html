@@ -403,6 +403,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 .plist-empty, .pane-empty { padding: 36px 16px; text-align: center; color: var(--muted); }
 .pane { border-radius: 22px; padding: 22px; display: grid; gap: 16px; position: sticky; top: calc(20px + env(safe-area-inset-top, 0px)); max-height: calc(100vh - 40px); overflow-y: auto; }
 .pane .tag { font-size: .78rem; color: var(--muted); }
+.pane .tag .fund { color: var(--accent); font-weight: 600; }
 .pane h2 { font-size: 1.5rem; line-height: 1.3; overflow-wrap: anywhere; }
 .pane h3 { font-size: 1.1rem; margin: 0 0 10px; }
 .stepper { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
@@ -487,6 +488,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
         <select id="fType" aria-label="ประเภท"></select>
         <select id="fOwner" aria-label="ผู้รับผิดชอบ"></select>
         <select id="fMethod" aria-label="วิธีการ"></select>
+        <select id="fFund" aria-label="แหล่งเงิน"></select>
         <select id="fSort" aria-label="เรียงลำดับ"><option value="">เรียงตามอัปเดตล่าสุด</option><option value="due">เรียงตามวันส่งมอบที่ใกล้ที่สุด</option><option value="budget">เรียงตามวงเงินมากไปน้อย</option><option value="order">เรียงตามลำดับในชีต</option></select>
         <span class="count" id="count"></span>
       </div>
@@ -552,6 +554,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
     <label class="field"><span>วงเงิน (บาท)</span><input type="text" id="uBudget" inputmode="decimal" placeholder="เช่น 1,250,000"></label>
     <label class="field"><span>วิธีการ</span><select id="uMethod"></select></label>
   </div>
+  <label class="field"><span>แหล่งเงิน</span><select id="uFund"><option value="">— ยังไม่ระบุ —</option><option value="เงินงบประมาณ">เงินงบประมาณ</option><option value="เงินนอกงบประมาณ">เงินนอกงบประมาณ</option></select></label>
   <label class="field"><span>ผู้รับผิดชอบ</span><select id="uOwner"></select></label>
   <p class="err" id="uErr" role="alert"></p>
   <div class="actions"><button class="btn" type="submit" id="uSave">บันทึก</button><button class="btn ghost" type="button" data-close>ยกเลิก</button></div>
@@ -567,6 +570,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
     <label class="field"><span>วงเงิน (บาท)</span><input type="text" id="aBudget" inputmode="decimal" placeholder="เช่น 1,250,000"></label>
     <label class="field"><span>วิธีการ</span><select id="aMethod"></select></label>
   </div>
+  <label class="field"><span>แหล่งเงิน</span><select id="aFund"><option value="">— ยังไม่ระบุ —</option><option value="เงินงบประมาณ">เงินงบประมาณ</option><option value="เงินนอกงบประมาณ">เงินนอกงบประมาณ</option></select></label>
   <div class="field" id="aDueField"><span>กำหนดวันส่งมอบ</span><input type="hidden" id="aDue"></div>
   <label class="field"><span>สถานะล่าสุด</span><textarea id="aStatus" maxlength="600" placeholder="เช่น ขออนุมัติงบประมาณ"></textarea></label>
   <p class="err" id="aErr" role="alert"></p>
@@ -816,6 +820,7 @@ function dueBadge(p, withDate) {
   return `<span class="due ${cls}">${txt}</span>${date}`;
 }
 const isDueAlert = p => p.due && p.stage !== "done" && daysLeft(p) <= 7;
+const FUNDS = ["เงินงบประมาณ", "เงินนอกงบประมาณ"];
 const baht = n => Number(n).toLocaleString("th-TH", { maximumFractionDigits: 2 });
 function parseBaht(v) { v = String(v || "").replace(/[,\s฿บาท]/g, ""); if (!v) return 0; const n = Number(v); return Number.isFinite(n) && n >= 0 ? n : NaN; }
 function methodList(extra) { const set = new Set(S.ref.methods || []); S.projects.forEach(p => p.method && set.add(p.method)); if (extra) set.add(extra); return [...set]; }
@@ -869,7 +874,7 @@ function filtered() {
   const q = S.q.trim().toLowerCase();
   return sorted(S.projects).filter(p =>
     (!S.stage || (S.stage === "due" ? isDueAlert(p) : S.stage === "none" ? !SI.hasOwnProperty(p.stage) : p.stage === S.stage)) &&
-    (!S.type || p.type === S.type) && (!S.owner || p.owner === S.owner) && (!S.method || (S.method === "-" ? !p.method : p.method === S.method)) &&
+    (!S.type || p.type === S.type) && (!S.owner || p.owner === S.owner) && (!S.method || (S.method === "-" ? !p.method : p.method === S.method)) && (!S.fund || (S.fund === "-" ? !p.fund : p.fund === S.fund)) &&
     (!q || (p.title + " " + p.status).toLowerCase().includes(q)))
     .sort((a, b) => S.sort === "budget" ? ((Number(b.budget) || -1) - (Number(a.budget) || -1))
       : S.sort === "due" ? ((a.due && a.stage !== "done" ? daysLeft(a) : 1e9) - (b.due && b.stage !== "done" ? daysLeft(b) : 1e9))
@@ -900,6 +905,10 @@ function renderOverview() {
     const sel = $("fMethod"); sel.replaceChildren(new Option("ทุกวิธีการ", ""));
     methodList().forEach(m => sel.append(new Option(`${m} (${mc[m] || 0})`, m)));
     sel.append(new Option(`ยังไม่ระบุวิธีการ (${mc["-"] || 0})`, "-")); sel.value = S.method || ""; }
+  { const fc = {}; P.forEach(p => { const k = p.fund || "-"; fc[k] = (fc[k] || 0) + 1; });
+    const sel = $("fFund"); sel.replaceChildren(new Option("ทุกแหล่งเงิน", ""));
+    FUNDS.forEach(f => sel.append(new Option(`${f} (${fc[f] || 0})`, f)));
+    sel.append(new Option(`ยังไม่ระบุแหล่งเงิน (${fc["-"] || 0})`, "-")); sel.value = S.fund || ""; }
   $("fType").value = S.type; $("fOwner").value = S.owner;
   const rows = filtered();
   const sum = rows.reduce((t, p) => t + (Number(p.budget) || 0), 0), withB = rows.filter(p => Number(p.budget) > 0).length;
@@ -950,10 +959,10 @@ async function renderPane(p) {
   paneKey = key;
   const si = SI[p.stage] ?? -1;
   pane.innerHTML = `
-    <div><div class="tag">${esc(p.type)}${p.method ? " | " + esc(p.method) : ""}</div><h2>${esc(p.title)}</h2></div>
+    <div><div class="tag">${esc(p.type)}${p.method ? " | " + esc(p.method) : ""}${p.fund ? ` | <span class="fund">${esc(p.fund)}</span>` : ""}</div><h2>${esc(p.title)}</h2></div>
     <div class="stepper">${STAGES.map((st, i) => `<div class="${i <= si ? "on" : ""}${i === si ? " cur" : ""}"><i></i>${esc(st.label.split(" / ")[0])}</div>`).join("")}</div>
     <div class="kvg">
-      <div><span>วงเงิน</span><b>${p.budget ? baht(p.budget) + " บาท" : "—"}</b></div>
+      <div><span>วงเงิน${p.fund ? " (" + esc(p.fund) + ")" : ""}</span><b>${p.budget ? baht(p.budget) + " บาท" : "—"}</b></div>
       <div><span>วันส่งมอบ</span><b>${p.due ? thDate(p.due) : "ยังไม่กำหนด"}</b> ${p.due ? dueBadge(p) : ""}</div>
       <div><span>ผู้รับผิดชอบ</span><b>${esc(p.owner || "—")}</b></div>
       <div><span>อัปเดตล่าสุด</span><b>${when(p.updatedAt)}</b>${p.updatedByName ? `<small> โดย ${esc(p.updatedByName)}</small>` : ""}</div>
@@ -978,6 +987,7 @@ $("q").oninput = e => { S.q = e.target.value; renderOverview(); };
 $("fType").onchange = e => { S.type = e.target.value; renderOverview(); };
 $("fOwner").onchange = e => { S.owner = e.target.value; renderOverview(); };
 $("fMethod").onchange = e => { S.method = e.target.value; renderOverview(); };
+$("fFund").onchange = e => { S.fund = e.target.value; renderOverview(); };
 $("fSort").onchange = e => { S.sort = e.target.value; renderOverview(); };
 
 // ---------- staff page ----------
@@ -1077,7 +1087,7 @@ async function openDetail(id) {
   const s = stageOf(p);
   $("dStage").style.cssText = stageVars(s.key); $("dStage").textContent = s.label;
   $("dTitle").textContent = p.title;
-  $("dKv").innerHTML = `<dt>ประเภท</dt><dd>${esc(p.type)}</dd><dt>วงเงิน</dt><dd>${p.budget ? baht(p.budget) + " บาท" : "—"}</dd><dt>วิธีการ</dt><dd>${esc(p.method) || "—"}</dd><dt>ผู้รับผิดชอบ</dt><dd>${esc(p.owner)}</dd>
+  $("dKv").innerHTML = `<dt>ประเภท</dt><dd>${esc(p.type)}</dd><dt>วงเงิน</dt><dd>${p.budget ? baht(p.budget) + " บาท" : "—"}</dd><dt>วิธีการ</dt><dd>${esc(p.method) || "—"}</dd><dt>แหล่งเงิน</dt><dd>${esc(p.fund) || "—"}</dd><dt>ผู้รับผิดชอบ</dt><dd>${esc(p.owner)}</dd>
     <dt>สถานะล่าสุด</dt><dd>${esc(p.status) || "—"}</dd>
     <dt>วันส่งมอบ</dt><dd>${p.due ? `${thDate(p.due)} ${dueBadge(p)}` : '<span class="muted">ยังไม่กำหนด</span>'}</dd><dt>อัปเดต</dt><dd>${when(p.updatedAt)}${p.updatedByName ? ` โดย ${esc(p.updatedByName)}` : ""}</dd>`;
   $("dUpdate").disabled = !S.db;
@@ -1105,7 +1115,7 @@ function openUpdate(id) {
   $("uDueNote").textContent = "จำนวนวันที่เหลือจะแสดงบนการ์ดและในหน้าโครงการรวม";
   fillSelect($("uOwner"), staffList(), "— เลือก —"); $("uOwner").value = p.owner || "";
   $("uBudget").value = p.budget ? baht(p.budget) : "";
-  fillSelect($("uMethod"), methodList(p.method), "— ยังไม่ระบุ —"); $("uMethod").value = p.method || "";
+  fillSelect($("uMethod"), methodList(p.method), "— ยังไม่ระบุ —"); $("uMethod").value = p.method || ""; $("uFund").value = p.fund || "";
   $("uErr").textContent = "";
   openDrawer("upd"); $("uStatus").focus();
 }
@@ -1114,7 +1124,7 @@ $("upd").addEventListener("submit", async e => {
   const p = S.projects.find(x => x.id === S.editing); if (!p || !S.db) return;
   const data = { stage: (document.querySelector('input[name="uStage"]:checked') || {}).value || "",
     status: $("uStatus").value.trim(), due: $("uDue").value || "",
-    owner: $("uOwner").value || p.owner, budget: parseBaht($("uBudget").value), method: $("uMethod").value || "",
+    owner: $("uOwner").value || p.owner, budget: parseBaht($("uBudget").value), method: $("uMethod").value || "", fund: $("uFund").value || "",
     updatedAt: Date.now(), updatedBy: S.me || "" };
   if (Number.isNaN(data.budget)) { $("uErr").textContent = "วงเงินต้องเป็นตัวเลข เช่น 1,250,000"; return; }
   if (!data.status) { $("uErr").textContent = "กรุณากรอกสถานะล่าสุด"; return; }
@@ -1132,7 +1142,7 @@ $("addBtn").onclick = () => {
   fillSelect($("aType"), typeList(), "— เลือกประเภท —"); fillSelect($("aOwner"), staffList(), "— เลือก —");
   $("aOwner").value = S.staff || ""; $("aName").value = ""; $("aStatus").value = ""; $("aStage-plan").checked = true; $("aErr").textContent = "";
   dpSet("aDue", ""); $("aDueField").hidden = false;
-  $("aBudget").value = ""; fillSelect($("aMethod"), methodList(), "— ยังไม่ระบุ —");
+  $("aBudget").value = ""; fillSelect($("aMethod"), methodList(), "— ยังไม่ระบุ —"); $("aFund").value = "";
   openDrawer("add"); $("aName").focus();
 };
 $("add").addEventListener("submit", async e => {
@@ -1143,7 +1153,7 @@ $("add").addEventListener("submit", async e => {
   if (Number.isNaN(parseBaht($("aBudget").value))) { $("aErr").textContent = "วงเงินต้องเป็นตัวเลข เช่น 1,250,000"; return; }
   const now = Date.now();
   const data = { title, type: $("aType").value, owner: $("aOwner").value, status: $("aStatus").value.trim(),
-    stage: (document.querySelector('input[name="aStage"]:checked') || {}).value || "plan", due: $("aDue").value || "", budget: parseBaht($("aBudget").value), method: $("aMethod").value || "",
+    stage: (document.querySelector('input[name="aStage"]:checked') || {}).value || "plan", due: $("aDue").value || "", budget: parseBaht($("aBudget").value), method: $("aMethod").value || "", fund: $("aFund").value || "",
     order: Math.max(0, ...S.projects.map(p => p.order || 0)) + 1, createdAt: now, updatedAt: now, updatedBy: S.me || "", source: "app" };
   $("aSave").disabled = true;
   try {
